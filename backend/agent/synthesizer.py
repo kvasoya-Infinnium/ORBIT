@@ -40,8 +40,12 @@ async def synthesize(question: str, items: list[EvidenceItem], total_found: int 
 def _format_items(items: list[EvidenceItem]) -> str:
     lines = []
     for it in items:
+        meta_str = ""
+        if it.metadata:
+            meta_parts = [f"{k}={v}" for k, v in it.metadata.items() if k != "root"]
+            meta_str = f"\n  metadata: {', '.join(meta_parts)}"
         lines.append(f"[{it.id}] source={it.source} title={it.title!r} "
-                     f"author={it.author} date={it.timestamp}\n{it.content[:600]}")
+                     f"author={it.author} date={it.timestamp}{meta_str}\n{it.content[:400]}")
     return "\n\n".join(lines)
 
 
