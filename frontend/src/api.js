@@ -28,7 +28,7 @@ export const api = {
   audit: () => http.get("/audit").then((r) => r.data),
   historyDetail: (query_id) => http.get(`/history/${query_id}`).then((r) => r.data),
   rebind: (query_id) => http.post(`/history/${query_id}/rebind`).then((r) => r.data),
-  browse: () => http.get("/browse").then((r) => r.data),
+  browse: (path = "") => http.get("/browse", { params: { path } }).then((r) => r.data),
   export: (query_id, format) =>
     http.post("/export", { query_id, format }, { responseType: "blob" }).then((r) => r.data),
 };

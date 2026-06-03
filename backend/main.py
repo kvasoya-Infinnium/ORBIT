@@ -74,31 +74,45 @@ def health():
 
 
 @app.get("/browse")
-def browse_folders():
-    """Open the Windows File Explorer folder picker and return the selected path."""
-    import threading
+def browse_folders(path: str = ""):
+    """List folders at a given path for the in-app file browser. Works for any remote client."""
+    from pathlib import Path
+    import platform
 
-    result_holder = {"path": None}
+    if not path:
+        if platform.system() == "Windows":
+            import string
+            drives = []
+            for letter in string.ascii_uppercase:
+                drive = f"{letter}:\\"
+                if Path(drive).exists():
+                    drives.append({"name": drive, "path": drive, "is_dir": True})
+            return {"current": "", "parent": None, "items": drives}
+        else:
+            path = "/"
 
-    def open_dialog():
-        import tkinter as tk
-        from tkinter import filedialog
-        root = tk.Tk()
-        root.withdraw()
-        root.attributes("-topmost", True)
-        folder = filedialog.askdirectory(title="Select a folder for ORBIT")
-        root.destroy()
-        if folder:
-            result_holder["path"] = folder
+    p = Path(path)
+    if not p.exists():
+        raise HTTPException(404, f"Path not found: {path}")
 
-    # Run in a thread to avoid blocking the event loop
-    thread = threading.Thread(target=open_dialog)
-    thread.start()
-    thread.join(timeout=120)
+    items = []
+    try:
+        for child in sorted(p.iterdir()):
+            if child.name.startswith("."):
+                continue
+            try:
+                is_dir = child.is_dir()
+            except PermissionError:
+                continue
+            items.append({"name": child.name, "path": str(child.resolve()), "is_dir": is_dir})
+    except PermissionError:
+        pass
 
-    if result_holder["path"]:
-        return {"path": result_holder["path"]}
-    raise HTTPException(400, "No folder selected")
+    return {
+        "current": str(p.resolve()),
+        "parent": str(p.parent.resolve()) if p.parent != p else None,
+        "items": items,
+    }
 
 
 async def _instance_dto(conn) -> dict:

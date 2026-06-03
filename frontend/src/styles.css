@@ -660,6 +660,17 @@ button:disabled { opacity: .45; cursor: not-allowed; }
 .field-row input { flex: 1; }
 .browse-btn { white-space: nowrap; padding: 8px 12px !important; font-size: 12px; }
 
+/* folder browser */
+.folder-browser { display: flex; flex-direction: column; gap: 10px; }
+.folder-browser-header { font-size: 12px; color: var(--muted); padding: 8px 10px; background: rgba(0,0,0,.2); border-radius: 8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.folder-browser-path { font-family: ui-monospace, monospace; margin-left: 6px; }
+.folder-browser-list { max-height: 250px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; background: rgba(0,0,0,.15); }
+.folder-browser-item { padding: 9px 12px; font-size: 13px; cursor: pointer; border-bottom: 1px solid var(--border); transition: background .1s; }
+.folder-browser-item:last-child { border-bottom: none; }
+.folder-browser-item:hover { background: rgba(110,139,255,.1); }
+.folder-browser-parent { color: var(--muted); }
+.folder-browser-actions { display: flex; justify-content: flex-end; gap: 8px; }
+
 /* source preview */
 .source-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 18px; margin-bottom: 18px; }
 .source-meta > div { display: flex; flex-direction: column; gap: 3px; font-size: 13px; }

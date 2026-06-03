@@ -1,38 +1,75 @@
 // components/CredentialModal.jsx
-// The popup that opens when you double-click a connector. It auto-builds its form
-// from the connector's `fields` (sent by the backend), lets you type credentials,
-// and on Save sends them to POST /connectors/{id}/connect, which stores them and
-// tests the connection. Secrets already saved show as ••• and are left untouched
-// unless you type a new value.
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { api } from "../api.js";
 import Icon, { connectorIconName } from "./Icon.jsx";
+
+function FolderBrowser({ onSelect, onCancel }) {
+  const [items, setItems] = useState([]);
+  const [current, setCurrent] = useState("");
+  const [parent, setParent] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  async function loadPath(path = "") {
+    setLoading(true);
+    try {
+      const res = await api.browse(path);
+      setItems(res.items.filter((i) => i.is_dir));
+      setCurrent(res.current || "");
+      setParent(res.parent || null);
+    } catch (e) {
+      setItems([]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => { loadPath(""); }, []);
+
+  return (
+    <div className="folder-browser">
+      <div className="folder-browser-header">
+        📂 <span className="folder-browser-path">{current || "Select a folder"}</span>
+      </div>
+      <div className="folder-browser-list">
+        {parent && (
+          <div className="folder-browser-item folder-browser-parent" onClick={() => loadPath(parent)}>
+            ↩ ..
+          </div>
+        )}
+        {loading && <p className="hint" style={{padding:"12px"}}>Loading…</p>}
+        {!loading && items.length === 0 && <p className="hint" style={{padding:"12px"}}>No subfolders</p>}
+        {items.map((item) => (
+          <div key={item.path} className="folder-browser-item" onClick={() => loadPath(item.path)}>
+            📁 {item.name}
+          </div>
+        ))}
+      </div>
+      <div className="folder-browser-actions">
+        <button className="ghost" onClick={onCancel}>Cancel</button>
+        <button className="primary" onClick={() => onSelect(current)} disabled={!current}>
+          Select this folder
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export default function CredentialModal({ connector, onClose, onSaved }) {
   const [values, setValues] = useState(() => ({ ...connector.values }));
   const [label, setLabel] = useState(connector.name);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState(null);
-  const [browsing, setBrowsing] = useState(false);
+  const [browsingField, setBrowsingField] = useState(null);
 
   function setField(key, v) {
     setValues((s) => ({ ...s, [key]: v }));
   }
 
-  async function handleBrowse(fieldKey) {
-    setBrowsing(true);
-    try {
-      const res = await api.browse();
-      if (res.path) {
-        const current = values[fieldKey] || "";
-        const newVal = current ? `${current}, ${res.path}` : res.path;
-        setField(fieldKey, newVal);
-      }
-    } catch (e) {
-      // User cancelled or no folder selected — do nothing
-    } finally {
-      setBrowsing(false);
-    }
+  function handleBrowseSelect(path) {
+    const current = values[browsingField] || "";
+    const newVal = current ? `${current}, ${path}` : path;
+    setField(browsingField, newVal);
+    setBrowsingField(null);
   }
 
   async function save() {
@@ -68,44 +105,55 @@ export default function CredentialModal({ connector, onClose, onSaved }) {
         </div>
 
         <div className="modal-body">
-          <label className="field">
-            <span className="field-label">Name (how it appears in your orbit)</span>
-            <input type="text" value={label} placeholder="e.g. HR Fileshare"
-                   onChange={(e) => setLabel(e.target.value)} />
-          </label>
-          {connector.fields.length === 0 && <p className="hint">No credentials required.</p>}
-          {connector.fields.map((f) => (
-            <label key={f.key} className="field">
-              <span className="field-label">{f.label}</span>
-              <div className="field-row">
-                <input
-                  type={f.type === "password" ? "password" : "text"}
-                  value={values[f.key] ?? ""}
-                  placeholder={f.placeholder}
-                  onChange={(e) => setField(f.key, e.target.value)}
-                />
-                {isFileshare && f.key === "FILESHARE_PATHS" && (
-                  <button className="ghost browse-btn" type="button" onClick={() => handleBrowse(f.key)} disabled={browsing}>
-                    <Icon name="folder" size={14} /> {browsing ? "…" : "Browse"}
-                  </button>
-                )}
-              </div>
-            </label>
-          ))}
+          {browsingField ? (
+            <FolderBrowser
+              onSelect={handleBrowseSelect}
+              onCancel={() => setBrowsingField(null)}
+            />
+          ) : (
+            <>
+              <label className="field">
+                <span className="field-label">Name (how it appears in your orbit)</span>
+                <input type="text" value={label} placeholder="e.g. HR Fileshare"
+                       onChange={(e) => setLabel(e.target.value)} />
+              </label>
+              {connector.fields.length === 0 && <p className="hint">No credentials required.</p>}
+              {connector.fields.map((f) => (
+                <label key={f.key} className="field">
+                  <span className="field-label">{f.label}</span>
+                  <div className="field-row">
+                    <input
+                      type={f.type === "password" ? "password" : "text"}
+                      value={values[f.key] ?? ""}
+                      placeholder={f.placeholder}
+                      onChange={(e) => setField(f.key, e.target.value)}
+                    />
+                    {isFileshare && f.key === "FILESHARE_PATHS" && (
+                      <button className="ghost browse-btn" type="button" onClick={() => setBrowsingField(f.key)}>
+                        <Icon name="folder" size={14} /> Browse
+                      </button>
+                    )}
+                  </div>
+                </label>
+              ))}
+            </>
+          )}
         </div>
 
-        {result && (
+        {result && !browsingField && (
           <div className={"connect-result " + (result.connected ? "ok" : "fail")}>
             <Icon name={result.connected ? "orbit" : "x"} size={15} />
             {result.connected ? " Connected — " : " Not connected — "}{result.detail}
           </div>
         )}
 
-        <div className="modal-foot">
-          <button className="primary" onClick={save} disabled={busy}>
-            {busy ? "Connecting…" : "Save & Connect"}
-          </button>
-        </div>
+        {!browsingField && (
+          <div className="modal-foot">
+            <button className="primary" onClick={save} disabled={busy}>
+              {busy ? "Connecting…" : "Save & Connect"}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
