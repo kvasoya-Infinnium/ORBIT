@@ -1,0 +1,15 @@
+# Web server
+fastapi
+uvicorn[standard]
+pydantic
+python-dotenv
+
+# Agent
+openai
+
+# Connectors
+httpx           # Slack, Zoho, AI Chat live mode
+boto3           # AWS S3
+pypdf           # PDF text extraction (Fileshare + S3)
+python-docx     # DOCX text extraction
+python-dateutil # date parsing helpers

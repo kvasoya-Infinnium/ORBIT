@@ -1,0 +1,13 @@
+INTERNAL MEMO — ENGINEERING POLICY UPDATE
+Date: 2026-05-18
+Author: Priya Mehta
+To: Engineering Team (incl. Rudra Raval, Meera Joshi)
+
+Subject: Updated code review and on-call policy for Q2
+
+Effective this quarter, all production changes require two reviewer approvals.
+On-call rotation now includes a secondary responder. Rudra Raval will lead the
+migration of the audit-logging service. Please direct questions to your manager.
+
+This memo is part of the Q2 operational rollout and should be retained for
+compliance purposes.

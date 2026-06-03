@@ -1,0 +1,15 @@
+Q2 DATA INCIDENT — PRELIMINARY REPORT
+=====================================
+Date: 2026-05-13
+Classification: Confidential / Compliance
+
+Summary:
+On the night of 2026-05-11 unusual access was detected against the customer
+database. Initial triage (see AI chat triage notes) indicated a credential
+compromise. Credentials were rotated and the compliance team was notified.
+
+Impact: Limited. No customer PII confirmed exfiltrated as of this report.
+Owner: Security Engineering
+Related people: Rudra Raval (audit-logging service), Priya Mehta (eng manager)
+
+Next steps: complete forensic review, finalize the review set for legal hold.

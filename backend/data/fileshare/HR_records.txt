@@ -1,0 +1,29 @@
+INFINNIUM — CONFIDENTIAL HR RECORDS
+====================================
+
+Employee: Rudra Raval
+Employee ID: EMP-1042
+Department: Engineering
+Role: Software Engineer (L3)
+Salary: 65200
+Manager: Priya Mehta
+Joined: 2024-08-15
+Email: rudra.raval@infinnium.com
+
+Employee: Aarav Shah
+Employee ID: EMP-1058
+Department: Finance
+Role: Analyst (L2)
+Salary: 54800
+Manager: Neha Patel
+Joined: 2025-01-09
+Email: aarav.shah@infinnium.com
+
+Employee: Meera Joshi
+Employee ID: EMP-1067
+Department: Engineering
+Role: Software Engineer (L3)
+Salary: 65200
+Manager: Priya Mehta
+Joined: 2023-11-20
+Email: meera.joshi@infinnium.com

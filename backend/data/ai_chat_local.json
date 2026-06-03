@@ -1,0 +1,38 @@
+{
+  "object": "list",
+  "data": [
+    {
+      "id": "conv_001",
+      "title": "Q2 data incident triage",
+      "user_email": "engineer1@infinnium.com",
+      "created_at": "2026-05-12T09:30:00",
+      "url": "https://chatgpt.com/c/conv_001",
+      "messages": [
+        {"author": {"role": "user"}, "content": "We detected unusual access on the customer DB last night. Is this related to the Q2 data incident?"},
+        {"author": {"role": "assistant"}, "content": "Based on the logs you shared, the access pattern matches the Q2 data incident. Recommend rotating credentials and notifying compliance."}
+      ]
+    },
+    {
+      "id": "conv_002",
+      "title": "Drafting message to Rudra Raval",
+      "user_email": "hr.lead@infinnium.com",
+      "created_at": "2026-05-20T14:10:00",
+      "url": "https://chatgpt.com/c/conv_002",
+      "messages": [
+        {"author": {"role": "user"}, "content": "Help me draft a note to Rudra Raval about the updated engineering policy."},
+        {"author": {"role": "assistant"}, "content": "Hi Rudra Raval, following up on the updated engineering policy effective this quarter..."}
+      ]
+    },
+    {
+      "id": "conv_003",
+      "title": "Compensation band question",
+      "user_email": "manager2@infinnium.com",
+      "created_at": "2026-04-02T11:00:00",
+      "url": "https://chatgpt.com/c/conv_003",
+      "messages": [
+        {"author": {"role": "user"}, "content": "What is the mid band salary for an L3 engineer? I think it is around 65200."},
+        {"author": {"role": "assistant"}, "content": "The documented L3 mid band is 65,200 per the HR compensation policy."}
+      ]
+    }
+  ]
+}
