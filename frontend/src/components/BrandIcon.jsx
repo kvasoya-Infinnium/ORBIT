@@ -96,6 +96,10 @@ const BRANDS = {
   ),
 };
 
+export function hasBrand(typeId) {
+  return Object.prototype.hasOwnProperty.call(BRANDS, typeId);
+}
+
 export default function BrandIcon({ typeId, size = 18, className = "" }) {
   const brand = BRANDS[typeId];
   if (!brand) {
