@@ -30,6 +30,7 @@ _SCHEMA = """
         item_ids      TEXT,
         answer        TEXT,
         per_connector TEXT,
+        items_json    TEXT,
         created_at    TEXT
     )
 """
@@ -41,7 +42,7 @@ def _conn() -> sqlite3.Connection:
     c.row_factory = sqlite3.Row
     c.execute(_SCHEMA)
     # Add columns for history feature (safe if already exist)
-    for col, coltype in [("answer", "TEXT"), ("per_connector", "TEXT")]:
+    for col, coltype in [("answer", "TEXT"), ("per_connector", "TEXT"), ("items_json", "TEXT")]:
         try:
             c.execute(f"ALTER TABLE audit ADD COLUMN {col} {coltype}")
         except sqlite3.OperationalError:
@@ -56,15 +57,17 @@ def init_db() -> None:
 
 
 def record_query(user: str, question: str, connectors: list[str],
-                 item_ids: list[str], answer: str = "", per_connector: dict = None) -> str:
+                 item_ids: list[str], answer: str = "", per_connector: dict = None,
+                 items_json: str = "") -> str:
     """Write one audit row and return its query_id."""
     query_id = str(uuid.uuid4())[:8]
     with _conn() as c:
         c.execute(
-            "INSERT INTO audit VALUES (?,?,?,?,?,?,?,?,?)",
+            "INSERT INTO audit VALUES (?,?,?,?,?,?,?,?,?,?)",
             (query_id, user, question, ",".join(connectors),
              len(item_ids), json.dumps(item_ids), answer,
-             json.dumps(per_connector or {}), datetime.now().isoformat()),
+             json.dumps(per_connector or {}), items_json,
+             datetime.now().isoformat()),
         )
     return query_id
 

@@ -17,6 +17,7 @@ Run it with:   uvicorn main:app --reload
 """
 
 import os
+import json
 import asyncio
 from fastapi import FastAPI, HTTPException, Body
 from fastapi.responses import PlainTextResponse
@@ -163,6 +164,7 @@ async def query(body: QueryBody):
     """Run the full agent pipeline and log the query to the audit store."""
     result = await pipeline.run_query(body.question, body.connector_ids)
     items: list[EvidenceItem] = result["items"]
+    items_dumped = [it.model_dump() for it in items]
 
     query_id = audit.record_query(
         user=body.user,
@@ -171,6 +173,7 @@ async def query(body: QueryBody):
         item_ids=[it.id for it in items],
         answer=result["answer"],
         per_connector=result["per_connector"],
+        items_json=json.dumps(items_dumped),
     )
     _RESULTS_CACHE[query_id] = items
 
@@ -180,7 +183,7 @@ async def query(body: QueryBody):
     return {
         "query_id": query_id,
         "answer": result["answer"],
-        "items": [it.model_dump() for it in items],
+        "items": items_dumped,
         "synth_count": result["synth_count"],
         "total_found": result["total_found"],
         "intent": result["intent"],
@@ -213,47 +216,29 @@ def get_history_detail(query_id: str):
 
 
 @app.post("/history/{query_id}/rebind")
-async def rebind_from_history(query_id: str):
-    """Re-apply credentials from a past query and re-run the same query.
-    Returns the full result just like POST /query does."""
+def rebind_from_history(query_id: str):
+    """Fetch the stored results of a past query from the database (no re-run)."""
     row = audit.get_query(query_id)
     if not row:
         raise HTTPException(404, "Query not found.")
 
-    # 1. Re-apply the exact credentials that were used
+    # Parse stored data
+    items = json.loads(row.get("items_json") or "[]")
+    per_connector = json.loads(row.get("per_connector") or "{}")
+    connector_ids = [c.strip() for c in row["connectors"].split(",") if c.strip()]
+
+    # Re-apply credentials so connectors stay configured
     creds_map = credentials.get_query_creds(query_id)
     for conn_id, cred_dict in creds_map.items():
         config.set_creds(conn_id, cred_dict)
 
-    # 2. Re-run the same query with the same connectors
-    connector_ids = [c.strip() for c in row["connectors"].split(",") if c.strip()]
-    question = row["question"]
-
-    result = await pipeline.run_query(question, connector_ids)
-    items: list[EvidenceItem] = result["items"]
-
-    # 3. Record this as a new query in audit
-    new_query_id = audit.record_query(
-        user=row.get("user", "rebind"),
-        question=question,
-        connectors=connector_ids,
-        item_ids=[it.id for it in items],
-        answer=result["answer"],
-        per_connector=result["per_connector"],
-    )
-    _RESULTS_CACHE[new_query_id] = items
-    credentials.snapshot_for_query(new_query_id, connector_ids)
-
     return {
-        "query_id": new_query_id,
-        "original_query_id": query_id,
-        "answer": result["answer"],
-        "items": [it.model_dump() for it in items],
-        "synth_count": result["synth_count"],
-        "total_found": result["total_found"],
-        "intent": result["intent"],
-        "planned_query": result["planned_query"],
-        "per_connector": result["per_connector"],
+        "query_id": query_id,
+        "answer": row.get("answer", ""),
+        "items": items,
+        "synth_count": min(15, len(items)),
+        "total_found": len(items),
+        "per_connector": per_connector,
         "rebound_connectors": connector_ids,
     }
 
