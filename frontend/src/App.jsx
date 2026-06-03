@@ -83,6 +83,14 @@ export default function App() {
     try { await api.removeConnector(id); } catch (e) { /* best-effort */ }
     await refresh();
   }
+  // Pull every connector out of the orbit (and delete the instances).
+  async function clearOrbit() {
+    const ids = orbit.slice();
+    if (ids.length === 0) return;
+    setOrbit([]);
+    await Promise.all(ids.map((id) => api.removeConnector(id).catch(() => {})));
+    await refresh();
+  }
 
   async function runQuery() {
     if (orbit.length === 0) return;
@@ -171,15 +179,26 @@ export default function App() {
                 className={"orbit-wrap" + (result ? " orbit-wrap-shrunk" : "")}
                 style={result ? { flex: `0 0 ${orbitHeight}px` } : undefined}
               >
-                {result && (
-                  <button
-                    className="orbit-collapse-btn"
-                    onClick={() => setOrbitCollapsed(true)}
-                    title="Collapse orbit"
-                  >
-                    <Icon name="chevron-up" size={16} /> Collapse
-                  </button>
-                )}
+                <div className="orbit-toolbar">
+                  {orbit.length > 0 && (
+                    <button
+                      className="orbit-clear-btn"
+                      onClick={clearOrbit}
+                      title="Remove every connector from the orbit"
+                    >
+                      <Icon name="trash" size={14} /> Clear all
+                    </button>
+                  )}
+                  {result && (
+                    <button
+                      className="orbit-collapse-btn"
+                      onClick={() => setOrbitCollapsed(true)}
+                      title="Collapse orbit"
+                    >
+                      <Icon name="chevron-up" size={16} /> Collapse
+                    </button>
+                  )}
+                </div>
                 <OrbitCanvas
                   connectors={connectors}
                   orbit={orbit}

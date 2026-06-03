@@ -323,16 +323,26 @@ button:disabled { opacity: .45; cursor: not-allowed; }
   box-shadow: 0 0 10px rgba(110,139,255,.4);
 }
 
-/* collapse button on top of the orbit when results are showing */
-.orbit-collapse-btn {
+/* floating toolbar pinned to the top-right corner of the orbit */
+.orbit-toolbar {
   position: absolute; right: 14px; top: 14px; z-index: 3;
+  display: inline-flex; align-items: center; gap: 8px;
+}
+.orbit-collapse-btn,
+.orbit-clear-btn {
   display: inline-flex; align-items: center; gap: 6px;
   background: rgba(18,25,46,.85); color: var(--muted);
   border: 1px solid var(--border-2); border-radius: 999px;
   padding: 5px 11px; font-size: 12px; font-weight: 600;
   backdrop-filter: blur(8px);
+  cursor: pointer; transition: var(--t-fast);
 }
 .orbit-collapse-btn:hover { color: var(--text); border-color: var(--accent); background: rgba(110,139,255,.18); }
+.orbit-clear-btn:hover {
+  color: var(--err); border-color: rgba(251,113,133,.55);
+  background: rgba(251,113,133,.14);
+  box-shadow: 0 0 14px rgba(251,113,133,.25);
+}
 
 /* the compact bar that replaces the orbit when it's collapsed */
 .orbit-collapsed-bar {
