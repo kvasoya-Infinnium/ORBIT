@@ -74,21 +74,61 @@ def health():
 
 @app.get("/browse")
 def browse_folders():
-    """Open the native Windows Explorer folder picker and return the selected path."""
+    """Open the modern Windows File Explorer folder picker and return the selected path."""
     import subprocess
     import platform
 
     if platform.system() == "Windows":
-        # Use the modern Shell.Application BrowseForFolder (Explorer-style dialog)
+        # Use COM-based modern folder picker (Windows Vista+ Explorer style)
         script = """
-Add-Type -AssemblyName System.Windows.Forms
-$dialog = New-Object System.Windows.Forms.FolderBrowserDialog
-$dialog.Description = "Select a folder for ORBIT Fileshare"
-$dialog.RootFolder = [System.Environment+SpecialFolder]::MyComputer
-$dialog.ShowNewFolderButton = $true
-$null = $dialog.ShowDialog((New-Object System.Windows.Forms.Form -Property @{TopMost=$true}))
-if ($dialog.SelectedPath) {
-    Write-Output $dialog.SelectedPath
+$source = @"
+using System;
+using System.Runtime.InteropServices;
+using System.Windows.Forms;
+
+[ComImport, Guid("DC1C5A9C-E88A-4dde-A5A1-60F82A20AEF7")]
+class FileOpenDialogCOM {}
+
+[ComImport, Guid("42f85136-db7e-439c-85f1-e4075d135fc8"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+interface IFileOpenDialog {
+    [PreserveSig] int Show([In] IntPtr hwnd);
+    void SetFileTypes();
+    void SetFileTypeIndex();
+    void GetFileTypeIndex();
+    void Advise();
+    void Unadvise();
+    void SetOptions([In] uint fos);
+    void GetOptions();
+    void SetDefaultFolder();
+    void SetFolder();
+    void GetFolder();
+    void GetCurrentSelection();
+    void SetFileName();
+    void GetFileName();
+    void SetTitle([In, MarshalAs(UnmanagedType.LPWStr)] string title);
+    void GetResult(out IShellItem ppsi);
+}
+
+[ComImport, Guid("43826D1E-E718-42EE-BC55-A1E261C37BFE"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+interface IShellItem {
+    void BindToHandler();
+    void GetParent();
+    [PreserveSig] int GetDisplayName([In] uint sigdnName, [MarshalAs(UnmanagedType.LPWStr)] out string ppszName);
+}
+"@
+Add-Type -TypeDefinition $source -ReferencedAssemblies System.Windows.Forms
+
+$dialog = New-Object FileOpenDialogCOM
+$iDialog = [IFileOpenDialog]$dialog
+$iDialog.SetOptions(0x20)  # FOS_PICKFOLDERS
+$iDialog.SetTitle("Select a folder for ORBIT")
+$result = $iDialog.Show([IntPtr]::Zero)
+if ($result -eq 0) {
+    $item = $null
+    $iDialog.GetResult([ref]$item)
+    $path = $null
+    $item.GetDisplayName(0x80058000, [ref]$path)
+    Write-Output $path
 }
 """
         result = subprocess.run(
