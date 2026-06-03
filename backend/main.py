@@ -74,24 +74,25 @@ def health():
 
 @app.get("/browse")
 def browse_folders():
-    """Open the native OS folder picker dialog and return the selected path."""
+    """Open the native Windows Explorer folder picker and return the selected path."""
     import subprocess
     import platform
 
     if platform.system() == "Windows":
-        # Use PowerShell to open native folder picker
+        # Use the modern Shell.Application BrowseForFolder (Explorer-style dialog)
         script = """
 Add-Type -AssemblyName System.Windows.Forms
 $dialog = New-Object System.Windows.Forms.FolderBrowserDialog
-$dialog.Description = "Select a folder for Fileshare"
-$dialog.ShowNewFolderButton = $false
-$result = $dialog.ShowDialog()
-if ($result -eq [System.Windows.Forms.DialogResult]::OK) {
+$dialog.Description = "Select a folder for ORBIT Fileshare"
+$dialog.RootFolder = [System.Environment+SpecialFolder]::MyComputer
+$dialog.ShowNewFolderButton = $true
+$null = $dialog.ShowDialog((New-Object System.Windows.Forms.Form -Property @{TopMost=$true}))
+if ($dialog.SelectedPath) {
     Write-Output $dialog.SelectedPath
 }
 """
         result = subprocess.run(
-            ["powershell", "-Command", script],
+            ["powershell", "-STA", "-Command", script],
             capture_output=True, text=True, timeout=120
         )
         path = result.stdout.strip()
@@ -99,10 +100,9 @@ if ($result -eq [System.Windows.Forms.DialogResult]::OK) {
             return {"path": path}
         raise HTTPException(400, "No folder selected")
     else:
-        # Fallback for Linux/Mac using zenity or tkinter
         try:
             result = subprocess.run(
-                ["zenity", "--file-selection", "--directory"],
+                ["zenity", "--file-selection", "--directory", "--title=Select folder for ORBIT"],
                 capture_output=True, text=True, timeout=120
             )
             path = result.stdout.strip()
