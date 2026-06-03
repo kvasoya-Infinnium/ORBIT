@@ -73,41 +73,44 @@ def health():
 
 
 @app.get("/browse")
-def browse_folders(path: str = ""):
-    """List folders at a given path for the file browser. Returns drives on Windows if path is empty."""
-    from pathlib import Path
+def browse_folders():
+    """Open the native OS folder picker dialog and return the selected path."""
+    import subprocess
     import platform
 
-    if not path:
-        # Return root drives on Windows, / on Unix
-        if platform.system() == "Windows":
-            import string
-            drives = []
-            for letter in string.ascii_uppercase:
-                drive = f"{letter}:\\"
-                if Path(drive).exists():
-                    drives.append({"name": drive, "path": drive, "is_dir": True})
-            return {"current": "", "items": drives}
-        else:
-            path = "/"
-
-    p = Path(path)
-    if not p.exists():
-        raise HTTPException(404, f"Path not found: {path}")
-
-    items = []
-    try:
-        for child in sorted(p.iterdir()):
-            if child.name.startswith("."):
-                continue
-            if child.is_dir():
-                items.append({"name": child.name, "path": str(child.resolve()), "is_dir": True})
-            else:
-                items.append({"name": child.name, "path": str(child.resolve()), "is_dir": False})
-    except PermissionError:
-        pass
-
-    return {"current": str(p.resolve()), "parent": str(p.parent.resolve()) if p.parent != p else None, "items": items}
+    if platform.system() == "Windows":
+        # Use PowerShell to open native folder picker
+        script = """
+Add-Type -AssemblyName System.Windows.Forms
+$dialog = New-Object System.Windows.Forms.FolderBrowserDialog
+$dialog.Description = "Select a folder for Fileshare"
+$dialog.ShowNewFolderButton = $false
+$result = $dialog.ShowDialog()
+if ($result -eq [System.Windows.Forms.DialogResult]::OK) {
+    Write-Output $dialog.SelectedPath
+}
+"""
+        result = subprocess.run(
+            ["powershell", "-Command", script],
+            capture_output=True, text=True, timeout=120
+        )
+        path = result.stdout.strip()
+        if path:
+            return {"path": path}
+        raise HTTPException(400, "No folder selected")
+    else:
+        # Fallback for Linux/Mac using zenity or tkinter
+        try:
+            result = subprocess.run(
+                ["zenity", "--file-selection", "--directory"],
+                capture_output=True, text=True, timeout=120
+            )
+            path = result.stdout.strip()
+            if path:
+                return {"path": path}
+        except FileNotFoundError:
+            pass
+        raise HTTPException(400, "No folder selected")
 
 
 async def _instance_dto(conn) -> dict:
