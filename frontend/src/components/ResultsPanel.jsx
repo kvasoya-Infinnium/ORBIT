@@ -73,8 +73,8 @@ export default function ResultsPanel({ result }) {
             <div className="results-list-head">
               {result.items.length} evidence items
             </div>
-            {result.items.map((it) => (
-              <EvidenceCard key={it.id} item={it} highlighted={highlight === it.id} onOpen={setOpenItem} />
+            {result.items.map((it, i) => (
+              <EvidenceCard key={it.id} item={it} index={i} highlighted={highlight === it.id} onOpen={setOpenItem} />
             ))}
           </div>
         )}

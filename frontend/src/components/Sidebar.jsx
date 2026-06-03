@@ -25,11 +25,11 @@ export default function Sidebar({
           {types.map((t) => (
             <button
               key={t.type_id}
-              className="type-chip"
+              className={"type-chip chip-ttype-" + t.type_id}
               onClick={() => onAddInstance(t.type_id)}
               title={`Add a ${t.name}`}
             >
-              <span className="type-chip-icon"><Icon name={connectorIconName(t.type_id)} size={15} /></span>
+              <span className={"type-chip-icon ttype-" + t.type_id}><Icon name={connectorIconName(t.type_id)} size={15} /></span>
               <span className="type-name">{t.name}</span>
               <Icon name="plus" size={14} className="type-plus" />
             </button>
@@ -48,7 +48,7 @@ export default function Sidebar({
             return (
               <div
                 key={c.id}
-                className={"connector-tile" + (inOrbit ? " in-orbit" : "")}
+                className={"connector-tile tile-ttype-" + c.type_id + (inOrbit ? " in-orbit" : "")}
                 draggable
                 onDragStart={(e) => e.dataTransfer.setData("text/connector", c.id)}
                 onDoubleClick={() => onOpenCreds(c.id)}

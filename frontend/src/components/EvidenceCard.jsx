@@ -4,12 +4,12 @@
 import React from "react";
 import Icon, { connectorIconName } from "./Icon.jsx";
 
-export default function EvidenceCard({ item, highlighted, onOpen }) {
+export default function EvidenceCard({ item, index = 0, highlighted, onOpen }) {
   return (
     <div
-      className="card"
+      className={"card card-ttype-" + item.source + (highlighted ? " card-highlighted" : "")}
       id={`ev-${item.id}`}
-      style={highlighted ? { borderColor: "#38bdf8", boxShadow: "0 0 0 2px #38bdf8" } : {}}
+      style={{ animationDelay: `${Math.min(index, 12) * 0.05}s` }}
     >
       <div className="row">
         <span className={"ev-icon ttype-" + item.source}>

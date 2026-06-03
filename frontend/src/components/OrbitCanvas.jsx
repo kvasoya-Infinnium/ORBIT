@@ -31,8 +31,20 @@ export default function OrbitCanvas({ orbit, byId, onDropConnector, onRemove, on
       onDragLeave={() => setDragOver(false)}
       onDrop={handleDrop}
     >
+      <div className="nebula nebula-1" />
+      <div className="nebula nebula-2" />
+      <div className="nebula nebula-3" />
       <div className="starfield" />
+      <div className="starfield starfield-2" />
       <div className="orbit-glow" />
+
+      {n > 0 && (
+        <>
+          <div className="energy-ring energy-ring-1" />
+          <div className="energy-ring energy-ring-2" />
+          <div className="energy-ring energy-ring-3" />
+        </>
+      )}
 
       {n === 0 && (
         <div className="orbit-empty">
@@ -60,14 +72,16 @@ export default function OrbitCanvas({ orbit, byId, onDropConnector, onRemove, on
                 >
                   {/* spoke: a line spanning from the core (x=-R) to this point (x=0).
                       It rotates with the ring, so it always points at the centre. */}
-                  <span className="spoke" style={{ left: -RADIUS, width: RADIUS }} />
+                  <span className="spoke" style={{ left: -RADIUS, width: RADIUS }}>
+                    <span className="spoke-pulse" style={{ animationDelay: `${i * 0.6}s` }} />
+                  </span>
 
                   {/* undo the placement angle so the pill sits upright relative to the ring */}
                   <div className="orbit-node-upright" style={{ transform: `rotate(${-angle}deg)` }}>
                     {/* counter the ring's continuous spin so the pill stays screen-upright */}
                     <div className="orbit-node-spin">
                       <div
-                        className="orbit-node-inner"   // centred on the point via translate(-50%,-50%)
+                        className={"orbit-node-inner ttype-glow-" + c.type_id}
                         onDoubleClick={() => onOpenCreds(id)}
                         title="Double-click for credentials"
                       >
@@ -88,6 +102,8 @@ export default function OrbitCanvas({ orbit, byId, onDropConnector, onRemove, on
           </div>
 
           <div className="orbit-core">
+            <span className="core-halo" />
+            <span className="core-halo core-halo-2" />
             <Icon name="orbit" size={30} className="core-mark" />
             <span className="core-label">ORBIT</span>
             <span className="core-count">{n} source{n === 1 ? "" : "s"}</span>
