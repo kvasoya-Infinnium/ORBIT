@@ -48,6 +48,14 @@ match and the UI will highlight:
   (typically 1-8 entries); each entry should be a phrase a document would
   literally contain.
 
+If the question mentions a PERSON (first + last name, or a clearly-named
+custodian), put the FULL name as a single string in `person` — do NOT split
+it across `keywords`. The name may appear in any case ("David Gell",
+"DAVID GELL", "david gell"); keep it as written. The matcher is
+case-insensitive. Use `person` only for one custodian; if the question
+genuinely names several people, leave it null and put each full name as a
+single multi-word entry in `keywords` (e.g. ["David Gell", "Jane Doe"]).
+
 Choose connectors intelligently: a salary/HR document lookup favors fileshare, s3 and azure_blob;
 "what did X say" favors email, slack, ai_chat; a CRM/contact/deal lookup favors zoho;
 notes, docs, wiki, or knowledge base queries favor notion."""
@@ -95,16 +103,31 @@ async def _plan_with_openai(question: str, available_ids: list[str], api_key: st
 def _plan_fallback(question: str, available_ids: list[str]) -> dict:
     """No-OpenAI plan: search everything, guess person/number from the text."""
     import re
-    words = question.split()
     # crude "exact value" = a standalone number like 65200
+    words = question.split()
     number = next((w.strip(".,") for w in words if w.strip(".,").isdigit()), None)
-    # crude "person" = two capitalized words in a row
+
+    # crude "person" = two capitalized-OR-all-caps words in a row, e.g.
+    # "David Gell", "DAVID GELL", "McDonald Reilly". Case-insensitive at the
+    # boundary; we still require the *letters* of each token to be cased
+    # uniformly so we don't grab random pairs.
     person = None
-    m = re.search(r"\b([A-Z][a-z]+ [A-Z][a-z]+)\b", question)
+    m = re.search(r"\b([A-Z][A-Za-z'’-]{1,}\s+[A-Z][A-Za-z'’-]{1,})\b", question)
     if m:
         person = m.group(1)
-    keywords = [w for w in words if len(w) > 3 and w.lower() not in
-                {"find", "show", "give", "what", "about", "every", "details", "related"}]
+
+    # if a person was found, drop the name tokens from keywords so we don't
+    # double-count them as separate words.
+    name_tokens = set(person.lower().split()) if person else set()
+    stop = {"find", "show", "give", "what", "about", "every", "details", "related",
+            "all", "any", "the", "for", "and", "with"}
+    keywords = [
+        w for w in words
+        if len(w) > 3
+        and w.lower() not in stop
+        and w.lower() not in name_tokens
+        and not w.strip(".,").isdigit()
+    ]
     return {
         "connectors": available_ids,
         "search": SearchQuery(keywords=keywords[:5], person=person, exact_value=number),
