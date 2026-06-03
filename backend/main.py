@@ -203,6 +203,9 @@ def get_history_detail(query_id: str):
     row = audit.get_query(query_id)
     if not row:
         raise HTTPException(404, "Query not found.")
+    # Remove large fields from the detail view
+    row.pop("items_json", None)
+    row.pop("item_ids", None)
     # Include which credentials (masked) were used
     raw_creds = credentials.get_query_creds(query_id)
     masked = {}
@@ -226,6 +229,11 @@ def rebind_from_history(query_id: str):
     items = json.loads(row.get("items_json") or "[]")
     per_connector = json.loads(row.get("per_connector") or "{}")
     connector_ids = [c.strip() for c in row["connectors"].split(",") if c.strip()]
+
+    # Trim content to avoid oversized responses
+    for item in items:
+        if item.get("content") and len(item["content"]) > 1000:
+            item["content"] = item["content"][:1000] + "…"
 
     # Re-apply credentials so connectors stay configured
     creds_map = credentials.get_query_creds(query_id)

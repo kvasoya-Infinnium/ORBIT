@@ -73,9 +73,12 @@ def record_query(user: str, question: str, connectors: list[str],
 
 
 def list_queries() -> list[dict]:
-    """All past queries, newest first — powers the Audit page."""
+    """All past queries, newest first — powers the History page (excludes large fields)."""
     with _conn() as c:
-        rows = c.execute("SELECT * FROM audit ORDER BY created_at DESC").fetchall()
+        rows = c.execute(
+            "SELECT query_id, user, question, connectors, result_count, created_at "
+            "FROM audit ORDER BY created_at DESC"
+        ).fetchall()
     return [dict(r) for r in rows]
 
 
