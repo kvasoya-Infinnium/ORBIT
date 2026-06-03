@@ -94,7 +94,7 @@ async def run_query(question: str, connector_ids: list[str], synth_n: int = 15) 
     # 5. SYNTHESIZE — the LLM only reads the top slice (fixed token cost); the UI and
     #    the export still receive the FULL ranked list (`deduped`).
     top_for_llm = deduped[:synth_n]
-    answer = await synthesizer.synthesize(question, top_for_llm)
+    answer = await synthesizer.synthesize(question, top_for_llm, total_found=len(deduped))
 
     return {
         "answer": answer,
