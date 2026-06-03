@@ -25,6 +25,7 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [apiError, setApiError] = useState(null);
+  const [abortController, setAbortController] = useState(null);
 
   const refresh = useCallback(async () => {
     try {
@@ -67,14 +68,25 @@ export default function App() {
 
   async function runQuery() {
     if (orbit.length === 0) return;
+    const controller = new AbortController();
+    setAbortController(controller);
     setLoading(true);
     setResult(null);
     try {
-      setResult(await api.query(question, orbit));
+      setResult(await api.query(question, orbit, { signal: controller.signal }));
     } catch (e) {
-      alert("Query failed: " + e.message);
+      if (e.name !== "CanceledError" && e.code !== "ERR_CANCELED") {
+        alert("Query failed: " + e.message);
+      }
     } finally {
       setLoading(false);
+      setAbortController(null);
+    }
+  }
+
+  function stopQuery() {
+    if (abortController) {
+      abortController.abort();
     }
   }
 
@@ -145,6 +157,11 @@ export default function App() {
                 ? <><span className="spinner" /> Searching…</>
                 : <><Icon name="search" size={16} /> Run on {orbit.length || "—"} source{orbit.length === 1 ? "" : "s"}</>}
             </button>
+            {loading && (
+              <button className="stop-btn" onClick={stopQuery} title="Stop query">
+                <Icon name="stop" size={16} /> Stop
+              </button>
+            )}
           </div>
 
           {result && <ResultsPanel result={result} />}

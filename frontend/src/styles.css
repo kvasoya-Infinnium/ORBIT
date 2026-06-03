@@ -90,6 +90,13 @@ button:disabled { opacity: .45; cursor: not-allowed; }
 }
 .primary:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 14px 30px rgba(110,130,255,.42); }
 .primary:active:not(:disabled) { transform: translateY(0); }
+.stop-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(255, 80, 80, 0.15); color: #ff5050;
+  padding: 11px 16px; font-weight: 700; border: 1px solid rgba(255, 80, 80, 0.4);
+  border-radius: 10px; cursor: pointer; transition: all .15s;
+}
+.stop-btn:hover { background: rgba(255, 80, 80, 0.25); border-color: #ff5050; }
 .ghost {
   display: inline-flex; align-items: center; gap: 7px;
   background: var(--panel-2); color: var(--text);

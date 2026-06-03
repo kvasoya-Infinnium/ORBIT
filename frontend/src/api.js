@@ -23,8 +23,8 @@ export const api = {
   removeConnector: (id) => http.delete(`/connectors/${id}`).then((r) => r.data),
   testConnector: (id) => http.post(`/connectors/${id}/test`).then((r) => r.data),
   connect: (id, creds) => http.post(`/connectors/${id}/connect`, creds).then((r) => r.data),
-  query: (question, connector_ids) =>
-    http.post("/query", { question, connector_ids }).then((r) => r.data),
+  query: (question, connector_ids, { signal } = {}) =>
+    http.post("/query", { question, connector_ids }, { signal }).then((r) => r.data),
   audit: () => http.get("/audit").then((r) => r.data),
   export: (query_id, format) =>
     http.post("/export", { query_id, format }, { responseType: "blob" }).then((r) => r.data),
