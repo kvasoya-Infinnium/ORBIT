@@ -44,9 +44,20 @@ export default function OrbitCanvas({ orbit, byId, onDropType, onRemove, onOpenC
     return () => ro.disconnect();
   }, []);
 
-  // auto-fit when orbit count or container size changes (unless the user has manually zoomed)
+  // auto-fit when orbit count or container size changes. If the user manually
+  // zoomed but the container has since shrunk so their zoom now overflows the
+  // canvas (e.g. orbit collapses after a query), force a refit so the ring
+  // stays inside the visible area instead of swinging off-screen.
   React.useEffect(() => {
-    if (!userZoomed) setZoom(autoFit(orbit.length, size.w, size.h));
+    const fit = autoFit(orbit.length, size.w, size.h);
+    if (!userZoomed) {
+      setZoom(fit);
+    } else if (zoom > fit * 1.4) {
+      setZoom(fit);
+      setUserZoomed(false);
+    }
+  // intentionally exclude `zoom` to avoid a refit loop when we just updated it
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orbit.length, size.w, size.h, userZoomed]);
 
   const clampZoom = (z) => Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, z));
