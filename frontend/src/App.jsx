@@ -100,7 +100,7 @@ export default function App() {
     setResult(null);
     try {
       const r = await api.query(question, orbit, { signal: controller.signal });
-      setResult(r);
+      setResult({ ...r, question: r.question || question });
       setOrbitCollapsed(true);
     } catch (e) {
       if (e.name !== "CanceledError" && e.code !== "ERR_CANCELED") {

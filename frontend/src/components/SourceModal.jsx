@@ -9,8 +9,19 @@
 import React, { useMemo, useEffect, useRef } from "react";
 import Icon from "./Icon.jsx";
 
-// Pull out the words/phrases we want to highlight from the planned query.
-// Falls back to splitting the raw question on whitespace if no plan exists.
+// Stopwords we won't bother highlighting (too generic, just noise).
+const STOPWORDS = new Set([
+  "the","a","an","and","or","but","is","are","was","were","be","been","being",
+  "of","to","in","on","for","with","at","by","from","as","into","about","that",
+  "this","these","those","it","its","i","me","my","you","your","we","our",
+  "give","show","find","tell","get","please","need","want","what","when",
+  "where","why","how","who","whom","whose","do","does","did","details",
+  "info","information","data","record","records","employee","person",
+]);
+
+// Pull out the words/phrases we want to highlight. We pull from BOTH the
+// structured planner query AND the raw question so single-term plans don't
+// leave the document looking unmarked.
 function collectTerms(query) {
   const out = new Set();
   if (!query) return [];
@@ -25,7 +36,9 @@ function collectTerms(query) {
   if (typeof query.question === "string") {
     query.question.split(/\s+/).forEach((w) => {
       const cleaned = w.replace(/[^\w\-]/g, "");
-      if (cleaned.length > 3) push(cleaned);
+      if (cleaned.length < 3) return;
+      if (STOPWORDS.has(cleaned.toLowerCase())) return;
+      push(cleaned);
     });
   }
   // longer terms first so multi-word phrases beat their substrings
@@ -107,7 +120,13 @@ export default function SourceModal({ item, query, onClose }) {
             Captured content
             {terms.length > 0 && (
               <span className="source-hl-hint">
-                · highlighting {terms.length} search term{terms.length === 1 ? "" : "s"}
+                · highlighting{" "}
+                {terms.map((t, i) => (
+                  <React.Fragment key={t}>
+                    <span className="source-hl-chip">{t}</span>
+                    {i < terms.length - 1 ? " " : ""}
+                  </React.Fragment>
+                ))}
               </span>
             )}
           </div>
