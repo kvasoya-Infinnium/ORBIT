@@ -63,7 +63,10 @@ def record_query(user: str, question: str, connectors: list[str],
     query_id = str(uuid.uuid4())[:8]
     with _conn() as c:
         c.execute(
-            "INSERT INTO audit VALUES (?,?,?,?,?,?,?,?,?,?)",
+            """INSERT INTO audit
+               (query_id, user, question, connectors, result_count, item_ids,
+                answer, per_connector, items_json, created_at)
+               VALUES (?,?,?,?,?,?,?,?,?,?)""",
             (query_id, user, question, ",".join(connectors),
              len(item_ids), json.dumps(item_ids), answer,
              json.dumps(per_connector or {}), items_json,
