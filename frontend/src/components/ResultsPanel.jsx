@@ -95,7 +95,13 @@ export default function ResultsPanel({ result }) {
         )}
       </div>
 
-      {openItem && <SourceModal item={openItem} onClose={() => setOpenItem(null)} />}
+      {openItem && (
+        <SourceModal
+          item={openItem}
+          query={{ ...(result.planned_query || {}), question: result.question }}
+          onClose={() => setOpenItem(null)}
+        />
+      )}
     </div>
   );
 }

@@ -6,13 +6,63 @@
 // a Fileshare item is a local path (C:\...\file.txt), Email is imap://, S3 is s3://.
 // Browsers block those for security. For eDiscovery the defensible thing is to show
 // the exact captured content + where it came from, which is what this does.
-import React from "react";
+import React, { useMemo, useEffect, useRef } from "react";
 import Icon from "./Icon.jsx";
 
-export default function SourceModal({ item, onClose }) {
+// Pull out the words/phrases we want to highlight from the planned query.
+// Falls back to splitting the raw question on whitespace if no plan exists.
+function collectTerms(query) {
+  const out = new Set();
+  if (!query) return [];
+  const push = (v) => {
+    if (!v) return;
+    const s = String(v).trim();
+    if (s.length >= 2) out.add(s);
+  };
+  if (Array.isArray(query.keywords)) query.keywords.forEach(push);
+  push(query.person);
+  push(query.exact_value);
+  if (typeof query.question === "string") {
+    query.question.split(/\s+/).forEach((w) => {
+      const cleaned = w.replace(/[^\w\-]/g, "");
+      if (cleaned.length > 3) push(cleaned);
+    });
+  }
+  // longer terms first so multi-word phrases beat their substrings
+  return [...out].sort((a, b) => b.length - a.length);
+}
+
+function escapeRegex(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
+
+// Renders `text` with each occurrence of any term wrapped in <mark>.
+function Highlighted({ text, terms }) {
+  if (!text) return null;
+  if (!terms || terms.length === 0) return <>{text}</>;
+  const pattern = new RegExp("(" + terms.map(escapeRegex).join("|") + ")", "gi");
+  const parts = text.split(pattern);
+  return (
+    <>
+      {parts.map((part, i) =>
+        i % 2 === 1
+          ? <mark key={i} className="hl">{part}</mark>
+          : <React.Fragment key={i}>{part}</React.Fragment>
+      )}
+    </>
+  );
+}
+
+export default function SourceModal({ item, query, onClose }) {
   const isWeb = item.link && /^https?:\/\//i.test(item.link);
   const meta = item.metadata || {};
   const metaKeys = Object.keys(meta).filter(k => k !== "root");
+  const terms = useMemo(() => collectTerms(query), [query]);
+
+  // jump to the first highlighted match when the modal opens
+  const contentRef = useRef(null);
+  useEffect(() => {
+    const first = contentRef.current?.querySelector("mark.hl");
+    if (first) first.scrollIntoView({ block: "center", behavior: "smooth" });
+  }, [item.id, terms]);
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
@@ -53,8 +103,19 @@ export default function SourceModal({ item, onClose }) {
             </>
           )}
 
-          <div className="source-content-label">Captured content</div>
-          <pre className="source-content">{item.content || "(no content captured)"}</pre>
+          <div className="source-content-label">
+            Captured content
+            {terms.length > 0 && (
+              <span className="source-hl-hint">
+                · highlighting {terms.length} search term{terms.length === 1 ? "" : "s"}
+              </span>
+            )}
+          </div>
+          <pre className="source-content" ref={contentRef}>
+            {item.content
+              ? <Highlighted text={item.content} terms={terms} />
+              : "(no content captured)"}
+          </pre>
         </div>
       </div>
     </div>

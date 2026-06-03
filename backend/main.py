@@ -226,6 +226,7 @@ async def query(body: QueryBody):
 
     return {
         "query_id": query_id,
+        "question": body.question,
         "answer": result["answer"],
         "items": items_dumped,
         "synth_count": result["synth_count"],
