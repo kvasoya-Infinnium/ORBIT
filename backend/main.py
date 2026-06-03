@@ -42,9 +42,10 @@ from connectors.aws_s3 import S3Connector
 from connectors.slack import SlackConnector
 from connectors.zoho_crm import ZohoCRMConnector
 from connectors.ai_chat import AIChatConnector
+from connectors.notion import NotionConnector
 
 for cls in (FileshareConnector, EmailConnector, S3Connector,
-            SlackConnector, ZohoCRMConnector, AIChatConnector):
+            SlackConnector, ZohoCRMConnector, AIChatConnector, NotionConnector):
     registry.register_type(cls)
     registry.create_instance(cls.id)   # seed one instance per type
 

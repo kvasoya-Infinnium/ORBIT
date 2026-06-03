@@ -81,6 +81,13 @@ const PATHS = {
       <circle cx="20.5" cy="7.3" r="1.3" />
     </>
   ),
+  notion: (
+    <>
+      <path d="M4 4h10l6 6v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" />
+      <path d="M14 4v6h6" />
+      <path d="M8 13h8M8 17h5" />
+    </>
+  ),
 };
 
 // map a connector type id to its icon name
@@ -90,6 +97,7 @@ export function connectorIconName(typeId) {
     email: "mail",
     s3: "cloud",
     slack: "message",
+    notion: "notion",
     zoho: "users",
     ai_chat: "sparkles",
   }[typeId] || "plug";
