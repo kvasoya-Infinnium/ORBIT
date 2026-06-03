@@ -68,23 +68,19 @@ export default function App() {
 
   const byId = (id) => connectors.find((c) => c.id === id);
 
-  function addToOrbit(id) {
-    setOrbit((o) => (o.includes(id) ? o : [...o, id]));
-  }
-  function removeFromOrbit(id) {
-    setOrbit((o) => o.filter((x) => x !== id));
-  }
-
-  // Create a new instance of a type (e.g. a second Fileshare), then open its popup.
-  async function addInstance(type_id) {
+  // Drop a TYPE into the orbit: create a fresh instance of that type, add it to
+  // the orbit, and open its credential popup. Used by both the sidebar drag-drop
+  // and the bottom "Add connector" menu.
+  async function addTypeToOrbit(type_id) {
     const created = await api.addConnector(type_id);
     await refresh();
+    setOrbit((o) => [...o, created.id]);
     setModalId(created.id);
   }
-  // Delete an instance and pull it out of the orbit if present.
-  async function deleteInstance(id) {
-    await api.removeConnector(id);
-    removeFromOrbit(id);
+  // Remove a connector from the orbit AND delete its underlying instance.
+  async function removeFromOrbit(id) {
+    setOrbit((o) => o.filter((x) => x !== id));
+    try { await api.removeConnector(id); } catch (e) { /* best-effort */ }
     await refresh();
   }
 
@@ -150,10 +146,7 @@ export default function App() {
           connectors={connectors}
           types={types}
           orbit={orbit}
-          onOpenCreds={(id) => setModalId(id)}
-          onAddToOrbit={addToOrbit}
-          onAddInstance={addInstance}
-          onDeleteInstance={deleteInstance}
+          onAddTypeToOrbit={addTypeToOrbit}
         />
 
         <main className={"workspace" + (result ? " workspace-has-results" : "")}>
@@ -191,7 +184,7 @@ export default function App() {
                   connectors={connectors}
                   orbit={orbit}
                   byId={byId}
-                  onDropConnector={addToOrbit}
+                  onDropType={addTypeToOrbit}
                   onRemove={removeFromOrbit}
                   onOpenCreds={(id) => setModalId(id)}
                 />

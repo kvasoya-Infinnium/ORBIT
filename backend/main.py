@@ -33,9 +33,9 @@ from core.models import EvidenceItem
 from agent import pipeline
 from services import audit, export, credentials
 
-# Register every connector TYPE (a template), then seed one INSTANCE of each so the
-# app opens with the familiar six connectors. Users can add more instances of any
-# type from the UI (e.g. a second Fileshare).
+# Register every connector TYPE (a template). Instances are created on demand
+# from the UI: dragging a type onto the canvas (or picking it from the Add menu)
+# spawns a fresh instance and drops it into the orbit.
 from connectors.fileshare import FileshareConnector
 from connectors.email_imap import EmailConnector
 from connectors.aws_s3 import S3Connector
@@ -47,7 +47,6 @@ from connectors.notion import NotionConnector
 for cls in (FileshareConnector, EmailConnector, S3Connector,
             SlackConnector, ZohoCRMConnector, AIChatConnector, NotionConnector):
     registry.register_type(cls)
-    registry.create_instance(cls.id)   # seed one instance per type
 
 # Make sure the audit table exists as soon as the app is imported.
 audit.init_db()

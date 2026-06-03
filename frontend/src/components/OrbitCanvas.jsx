@@ -25,7 +25,7 @@ function autoFit(n, w, h) {
   return Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, fit));
 }
 
-export default function OrbitCanvas({ orbit, byId, onDropConnector, onRemove, onOpenCreds }) {
+export default function OrbitCanvas({ orbit, byId, onDropType, onRemove, onOpenCreds }) {
   const [dragOver, setDragOver] = React.useState(false);
   const [zoom, setZoom] = React.useState(1);
   const [userZoomed, setUserZoomed] = React.useState(false);
@@ -64,8 +64,8 @@ export default function OrbitCanvas({ orbit, byId, onDropConnector, onRemove, on
   function handleDrop(e) {
     e.preventDefault();
     setDragOver(false);
-    const id = e.dataTransfer.getData("text/connector");
-    if (id) onDropConnector(id);
+    const typeId = e.dataTransfer.getData("text/connector-type");
+    if (typeId) onDropType?.(typeId);
   }
 
   const n = orbit.length;

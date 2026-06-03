@@ -36,7 +36,7 @@ def create_instance(type_id: str, label: str | None = None) -> Connector:
     n = _counters[type_id]
     inst = cls()
     inst.instance_id = f"{type_id}_{n}"
-    inst.label = label or (cls.name if n == 1 else f"{cls.name} {n}")
+    inst.label = label or cls.name
     INSTANCES[inst.instance_id] = inst
     return inst
 
