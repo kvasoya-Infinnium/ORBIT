@@ -72,6 +72,44 @@ def health():
     return {"status": "ok"}
 
 
+@app.get("/browse")
+def browse_folders(path: str = ""):
+    """List folders at a given path for the file browser. Returns drives on Windows if path is empty."""
+    from pathlib import Path
+    import platform
+
+    if not path:
+        # Return root drives on Windows, / on Unix
+        if platform.system() == "Windows":
+            import string
+            drives = []
+            for letter in string.ascii_uppercase:
+                drive = f"{letter}:\\"
+                if Path(drive).exists():
+                    drives.append({"name": drive, "path": drive, "is_dir": True})
+            return {"current": "", "items": drives}
+        else:
+            path = "/"
+
+    p = Path(path)
+    if not p.exists():
+        raise HTTPException(404, f"Path not found: {path}")
+
+    items = []
+    try:
+        for child in sorted(p.iterdir()):
+            if child.name.startswith("."):
+                continue
+            if child.is_dir():
+                items.append({"name": child.name, "path": str(child.resolve()), "is_dir": True})
+            else:
+                items.append({"name": child.name, "path": str(child.resolve()), "is_dir": False})
+    except PermissionError:
+        pass
+
+    return {"current": str(p.resolve()), "parent": str(p.parent.resolve()) if p.parent != p else None, "items": items}
+
+
 async def _instance_dto(conn) -> dict:
     """The JSON shape the UI expects for one connector instance.
     The connection test is wrapped in a short timeout so one slow/hanging source
