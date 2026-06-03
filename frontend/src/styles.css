@@ -238,12 +238,68 @@ button:disabled { opacity: .45; cursor: not-allowed; }
 .chip-ttype-ai_chat:hover   { border-color: rgba(154,123,255,.6);  background: rgba(154,123,255,.14); }
 
 /* ---------- workspace ---------- */
-.workspace { flex: 1; min-width: 0; display: flex; flex-direction: column; overflow-y: auto; padding: 20px 28px 30px; }
+.workspace {
+  flex: 1; min-width: 0; min-height: 0;
+  display: flex; flex-direction: column;
+  overflow: hidden;                       /* no page scroll — sections handle their own */
+  padding: 14px 22px 14px;
+  gap: 12px;
+}
+
+/* orbit wrapper — fills available space before search, shrinks after */
+.orbit-wrap { flex: 1; min-height: 0; display: flex; flex-direction: column; position: relative; }
+.orbit-wrap .orbit-canvas { flex: 1; height: auto; min-height: 0; }
+.orbit-wrap-shrunk { flex: 0 0 180px; }
+.orbit-wrap-shrunk .orbit-canvas { min-height: 0; }
+
+/* collapse button on top of the orbit when results are showing */
+.orbit-collapse-btn {
+  position: absolute; right: 14px; top: 14px; z-index: 3;
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(18,25,46,.85); color: var(--muted);
+  border: 1px solid var(--border-2); border-radius: 999px;
+  padding: 5px 11px; font-size: 12px; font-weight: 600;
+  backdrop-filter: blur(8px);
+}
+.orbit-collapse-btn:hover { color: var(--text); border-color: var(--accent); background: rgba(110,139,255,.18); }
+
+/* the compact bar that replaces the orbit when it's collapsed */
+.orbit-collapsed-bar {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 12px; border-radius: var(--r);
+  background: linear-gradient(90deg, rgba(110,139,255,.14), rgba(154,123,255,.08));
+  border: 1px solid var(--border-2);
+  color: var(--text); font-size: 13px;
+  cursor: pointer; transition: var(--t-fast);
+  flex-shrink: 0;
+}
+.orbit-collapsed-bar:hover { border-color: var(--accent); box-shadow: 0 0 18px rgba(110,139,255,.25); }
+.orbit-collapsed-mark {
+  width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center;
+  background: rgba(52,227,207,.15); color: var(--cyan);
+}
+.orbit-collapsed-text { font-weight: 700; letter-spacing: 2px; }
+.orbit-collapsed-spacer { flex: 1; }
+.orbit-collapsed-toggle { display: inline-flex; align-items: center; gap: 4px; color: var(--muted); font-size: 12px; font-weight: 600; }
+
+/* querybar pinned to bottom (no margin pushing layout) */
+.workspace .querybar { margin-top: 0; flex-shrink: 0; }
+
+/* results panel fills the rest with its own scroll */
+.workspace-has-results .results {
+  flex: 1; min-height: 0; display: flex; flex-direction: column;
+  margin-top: 0;
+}
+.workspace-has-results .results-tabs { flex-shrink: 0; }
+.workspace-has-results .results-tab-content {
+  flex: 1; min-height: 0; overflow-y: auto;
+  padding-right: 8px;                     /* breathing room for the scrollbar */
+}
 
 /* ---------- orbit canvas ---------- */
 .orbit-canvas {
-  position: relative; flex-shrink: 0;
-  height: 470px; border-radius: var(--r-xl); overflow: hidden;
+  position: relative;
+  height: 100%; min-height: 180px; border-radius: var(--r-xl); overflow: hidden;
   border: 1px solid var(--border);
   background:
     radial-gradient(ellipse at 50% 40%, rgba(110,139,255,.05), transparent 70%),
@@ -309,7 +365,39 @@ button:disabled { opacity: .45; cursor: not-allowed; }
   color: var(--accent); animation: spin 26s linear infinite;
 }
 
-.orbit-stage { position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+.orbit-stage {
+  position: relative; width: 100%; height: 100%;
+  display: flex; align-items: center; justify-content: center;
+  transition: transform var(--t-med);
+  transform-origin: 50% 50%;
+}
+
+/* zoom control pill — bottom-left corner of the canvas */
+.orbit-zoom-controls {
+  position: absolute; left: 14px; bottom: 14px; z-index: 4;
+  display: flex; align-items: center; gap: 2px;
+  padding: 4px; border-radius: 999px;
+  background: rgba(8,11,22,.78); backdrop-filter: blur(10px);
+  border: 1px solid var(--border-2);
+  box-shadow: 0 4px 14px rgba(0,0,0,.4);
+}
+.orbit-zoom-btn {
+  width: 30px; height: 30px; border-radius: 999px;
+  display: grid; place-items: center;
+  background: transparent; color: var(--muted);
+  transition: var(--t-fast);
+}
+.orbit-zoom-btn:hover:not(:disabled) {
+  background: rgba(110,139,255,.18); color: var(--accent);
+}
+.orbit-zoom-btn:disabled { opacity: .3; cursor: not-allowed; }
+.orbit-zoom-fit {
+  min-width: 50px; height: 30px; padding: 0 8px; border-radius: 999px;
+  background: transparent; color: var(--muted);
+  font-size: 11.5px; font-weight: 700; letter-spacing: .3px;
+  transition: var(--t-fast);
+}
+.orbit-zoom-fit:hover { color: var(--cyan); background: rgba(52,227,207,.12); }
 .orbit-guide { position: absolute; border-radius: 50%; border: 1px dashed rgba(140,160,220,.18); }
 .orbit-guide-inner { border-style: solid; border-color: rgba(140,160,220,.08); }
 
@@ -406,9 +494,9 @@ button:disabled { opacity: .45; cursor: not-allowed; }
 
 /* ---------- query bar ---------- */
 .querybar {
-  position: relative; display: flex; gap: 12px; margin-top: 20px; flex-shrink: 0;
+  position: relative; display: flex; gap: 10px; margin-top: 0; flex-shrink: 0;
   background: var(--panel); border: 1px solid var(--border);
-  padding: 9px 9px 9px 44px; border-radius: var(--r-lg); backdrop-filter: blur(8px);
+  padding: 7px 7px 7px 42px; border-radius: var(--r-lg); backdrop-filter: blur(8px);
   transition: border-color var(--t-fast), box-shadow var(--t-fast);
 }
 /* animated conic-gradient ring that lights up on focus */
@@ -450,13 +538,13 @@ button:disabled { opacity: .45; cursor: not-allowed; }
 }
 
 /* ---------- results ---------- */
-.results { margin-top: 24px; animation: rise .3s ease-out; }
+.results { margin-top: 0; animation: rise .3s ease-out; }
 @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 
 /* Tabs */
 .results-tabs {
   display: flex; align-items: center; gap: 4px; flex-wrap: wrap;
-  margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 0;
+  margin-bottom: 10px; border-bottom: 1px solid var(--border); padding-bottom: 0;
 }
 .results-tab {
   position: relative;
@@ -609,7 +697,9 @@ button:disabled { opacity: .45; cursor: not-allowed; }
 @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
 .modal {
   position: relative;
-  width: 460px; max-width: 92vw; max-height: 88vh; overflow: auto;
+  width: 460px; max-width: 92vw; max-height: 78vh;
+  display: flex; flex-direction: column;       /* head/body/foot stack as a flex column */
+  overflow: hidden;                            /* clip rounded corners; body handles scroll */
   background:
     radial-gradient(900px 240px at 50% -10%, rgba(110,139,255,.18), transparent 60%),
     var(--solid);
@@ -621,24 +711,38 @@ button:disabled { opacity: .45; cursor: not-allowed; }
 .modal::before {
   content: ""; position: absolute; left: 16px; right: 16px; top: 0; height: 2px;
   background: linear-gradient(90deg, transparent, var(--cyan), var(--accent), var(--accent-2), transparent);
-  border-radius: 2px; opacity: .8;
+  border-radius: 2px; opacity: .8; z-index: 2;
 }
 .modal-wide { width: 780px; }
 @keyframes pop { from { transform: translateY(12px) scale(.97); opacity: 0; } to { transform: none; opacity: 1; } }
-.modal-head { display: flex; gap: 13px; align-items: flex-start; padding: 18px 18px 14px; border-bottom: 1px solid var(--border); }
+.modal-head {
+  display: flex; gap: 12px; align-items: flex-start;
+  padding: 14px 16px 12px;
+  border-bottom: 1px solid var(--border);
+  background:
+    radial-gradient(600px 120px at 50% -40%, rgba(110,139,255,.14), transparent 60%),
+    var(--solid);
+  flex-shrink: 0;                              /* sticky — does not scroll */
+  z-index: 1;
+}
 .modal-icon {
-  width: 40px; height: 40px; border-radius: 11px;
+  width: 36px; height: 36px; border-radius: 10px;
   display: grid; place-items: center; flex-shrink: 0;
   background: linear-gradient(135deg, rgba(110,139,255,.22), rgba(154,123,255,.18));
   border: 1px solid rgba(110,139,255,.3);
   color: var(--accent);
   box-shadow: 0 0 18px rgba(110,139,255,.25);
 }
-.modal-head h3 { margin: 0; font-size: 16px; }
-.modal-head p { margin: 4px 0 0; font-size: 12.5px; color: var(--muted); }
-.modal-close { margin-left: auto; background: transparent; color: var(--muted); display: grid; place-items: center; padding: 4px; border-radius: 8px; }
+.modal-head h3 { margin: 0; font-size: 15px; line-height: 1.3; }
+.modal-head p { margin: 3px 0 0; font-size: 12px; color: var(--muted); }
+.modal-close { margin-left: auto; background: transparent; color: var(--muted); display: grid; place-items: center; padding: 4px; border-radius: 8px; flex-shrink: 0; }
 .modal-close:hover { color: var(--text); background: rgba(255,255,255,.06); }
-.modal-body { padding: 16px 18px; display: flex; flex-direction: column; gap: 13px; }
+.modal-body {
+  padding: 14px 16px;
+  display: flex; flex-direction: column; gap: 11px;
+  flex: 1; min-height: 0;
+  overflow-y: auto;                            /* the only scrolling region */
+}
 .field { display: flex; flex-direction: column; gap: 6px; }
 .field-label { font-size: 12px; color: var(--muted); font-weight: 500; }
 .field input {
@@ -650,10 +754,20 @@ button:disabled { opacity: .45; cursor: not-allowed; }
   box-shadow: 0 0 0 3px rgba(110,139,255,.18), 0 0 18px rgba(110,139,255,.2);
   background: rgba(0,0,0,.22);
 }
-.connect-result { display: flex; align-items: center; gap: 7px; margin: 0 18px; padding: 10px 12px; border-radius: 9px; font-size: 13px; }
+.connect-result {
+  display: flex; align-items: center; gap: 7px;
+  margin: 0 16px; padding: 9px 12px; border-radius: 9px; font-size: 13px;
+  flex-shrink: 0;                              /* sticky — sits above the foot */
+}
 .connect-result.ok { background: rgba(52,211,153,.12); color: var(--ok); border: 1px solid rgba(52,211,153,.3); }
 .connect-result.fail { background: rgba(251,113,133,.12); color: var(--err); border: 1px solid rgba(251,113,133,.3); }
-.modal-foot { display: flex; justify-content: flex-end; gap: 10px; padding: 14px 18px 18px; }
+.modal-foot {
+  display: flex; justify-content: flex-end; gap: 10px;
+  padding: 12px 16px 14px;
+  border-top: 1px solid var(--border);
+  background: var(--solid);
+  flex-shrink: 0;                              /* sticky — does not scroll */
+}
 
 /* field row with browse button */
 .field-row { display: flex; gap: 8px; align-items: center; }

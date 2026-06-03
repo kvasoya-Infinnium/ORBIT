@@ -26,6 +26,7 @@ export default function App() {
   const [result, setResult] = useState(null);
   const [apiError, setApiError] = useState(null);
   const [abortController, setAbortController] = useState(null);
+  const [orbitCollapsed, setOrbitCollapsed] = useState(false);
 
   const refresh = useCallback(async () => {
     try {
@@ -73,7 +74,9 @@ export default function App() {
     setLoading(true);
     setResult(null);
     try {
-      setResult(await api.query(question, orbit, { signal: controller.signal }));
+      const r = await api.query(question, orbit, { signal: controller.signal });
+      setResult(r);
+      setOrbitCollapsed(true);
     } catch (e) {
       if (e.name !== "CanceledError" && e.code !== "ERR_CANCELED") {
         alert("Query failed: " + e.message);
@@ -132,15 +135,43 @@ export default function App() {
           onDeleteInstance={deleteInstance}
         />
 
-        <main className="workspace">
-          <OrbitCanvas
-            connectors={connectors}
-            orbit={orbit}
-            byId={byId}
-            onDropConnector={addToOrbit}
-            onRemove={removeFromOrbit}
-            onOpenCreds={(id) => setModalId(id)}
-          />
+        <main className={"workspace" + (result ? " workspace-has-results" : "")}>
+          {result && orbitCollapsed ? (
+            <button
+              className="orbit-collapsed-bar"
+              onClick={() => setOrbitCollapsed(false)}
+              title="Expand orbit"
+            >
+              <span className="orbit-collapsed-mark"><Icon name="orbit" size={16} /></span>
+              <span className="orbit-collapsed-text">
+                ORBIT · {orbit.length} source{orbit.length === 1 ? "" : "s"}
+              </span>
+              <span className="orbit-collapsed-spacer" />
+              <span className="orbit-collapsed-toggle">
+                <Icon name="chevron-down" size={16} /> Expand
+              </span>
+            </button>
+          ) : (
+            <div className={"orbit-wrap" + (result ? " orbit-wrap-shrunk" : "")}>
+              {result && (
+                <button
+                  className="orbit-collapse-btn"
+                  onClick={() => setOrbitCollapsed(true)}
+                  title="Collapse orbit"
+                >
+                  <Icon name="chevron-up" size={16} /> Collapse
+                </button>
+              )}
+              <OrbitCanvas
+                connectors={connectors}
+                orbit={orbit}
+                byId={byId}
+                onDropConnector={addToOrbit}
+                onRemove={removeFromOrbit}
+                onOpenCreds={(id) => setModalId(id)}
+              />
+            </div>
+          )}
 
           {/* ---- query bar ---- */}
           <div className="querybar">
