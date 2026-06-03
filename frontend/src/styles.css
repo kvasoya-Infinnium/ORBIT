@@ -455,6 +455,7 @@ button:disabled { opacity: .45; cursor: not-allowed; }
 .history-cred-keys { font-size: 12px; color: var(--faint); }
 
 .rebind-btn { margin-top: 4px; }
+.rebind-hint { margin: 6px 0 0; font-size: 12px; color: var(--faint); }
 .rebind-msg { margin: 8px 0 0; font-size: 13px; }
 .rebind-ok { color: #4ade80; }
 .rebind-err { color: var(--err); }

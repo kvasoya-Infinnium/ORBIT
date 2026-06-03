@@ -213,16 +213,49 @@ def get_history_detail(query_id: str):
 
 
 @app.post("/history/{query_id}/rebind")
-def rebind_from_history(query_id: str):
-    """Re-apply credentials from a past query to the current connectors."""
+async def rebind_from_history(query_id: str):
+    """Re-apply credentials from a past query and re-run the same query.
+    Returns the full result just like POST /query does."""
+    row = audit.get_query(query_id)
+    if not row:
+        raise HTTPException(404, "Query not found.")
+
+    # 1. Re-apply the exact credentials that were used
     creds_map = credentials.get_query_creds(query_id)
-    if not creds_map:
-        raise HTTPException(404, "No saved credentials for this query.")
-    rebound = []
     for conn_id, cred_dict in creds_map.items():
         config.set_creds(conn_id, cred_dict)
-        rebound.append(conn_id)
-    return {"rebound": rebound}
+
+    # 2. Re-run the same query with the same connectors
+    connector_ids = [c.strip() for c in row["connectors"].split(",") if c.strip()]
+    question = row["question"]
+
+    result = await pipeline.run_query(question, connector_ids)
+    items: list[EvidenceItem] = result["items"]
+
+    # 3. Record this as a new query in audit
+    new_query_id = audit.record_query(
+        user=row.get("user", "rebind"),
+        question=question,
+        connectors=connector_ids,
+        item_ids=[it.id for it in items],
+        answer=result["answer"],
+        per_connector=result["per_connector"],
+    )
+    _RESULTS_CACHE[new_query_id] = items
+    credentials.snapshot_for_query(new_query_id, connector_ids)
+
+    return {
+        "query_id": new_query_id,
+        "original_query_id": query_id,
+        "answer": result["answer"],
+        "items": [it.model_dump() for it in items],
+        "synth_count": result["synth_count"],
+        "total_found": result["total_found"],
+        "intent": result["intent"],
+        "planned_query": result["planned_query"],
+        "per_connector": result["per_connector"],
+        "rebound_connectors": connector_ids,
+    }
 
 
 class ExportBody(BaseModel):

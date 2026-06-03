@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { api } from "../api.js";
 import Icon from "./Icon.jsx";
 
-function DetailView({ detail, onBack }) {
+function DetailView({ detail, onBack, onRebindComplete }) {
   const perConnector = detail.per_connector ? JSON.parse(detail.per_connector) : {};
   const [rebinding, setRebinding] = useState(false);
   const [rebindMsg, setRebindMsg] = useState("");
@@ -14,7 +14,10 @@ function DetailView({ detail, onBack }) {
     setRebindMsg("");
     try {
       const res = await api.rebind(detail.query_id);
-      setRebindMsg(`✓ Re-applied credentials for: ${res.rebound.join(", ")}`);
+      setRebindMsg(`✓ Query re-ran successfully on: ${res.rebound_connectors.join(", ")}`);
+      if (onRebindComplete) {
+        onRebindComplete(res);
+      }
     } catch (e) {
       setRebindMsg("✗ " + (e.response?.data?.detail || e.message));
     } finally {
@@ -82,15 +85,16 @@ function DetailView({ detail, onBack }) {
       <div className="history-detail-section">
         <button className="primary rebind-btn" onClick={handleRebind} disabled={rebinding}>
           <Icon name="refresh" size={15} />
-          {rebinding ? "Re-applying…" : "Rebind Credentials"}
+          {rebinding ? "Re-running query…" : "Rebind & Re-run"}
         </button>
+        <p className="rebind-hint">Re-applies credentials and re-runs the exact same query</p>
         {rebindMsg && <p className={"rebind-msg " + (rebindMsg.startsWith("✓") ? "rebind-ok" : "rebind-err")}>{rebindMsg}</p>}
       </div>
     </div>
   );
 }
 
-export default function AuditModal({ onClose }) {
+export default function AuditModal({ onClose, onRebindComplete }) {
   const [rows, setRows] = useState([]);
   const [detail, setDetail] = useState(null);
   const [loadingId, setLoadingId] = useState(null);
@@ -122,7 +126,7 @@ export default function AuditModal({ onClose }) {
         </div>
         <div className="modal-body">
           {detail ? (
-            <DetailView detail={detail} onBack={() => setDetail(null)} />
+            <DetailView detail={detail} onBack={() => setDetail(null)} onRebindComplete={(res) => { if (onRebindComplete) onRebindComplete(res); }} />
           ) : (
             <table className="audit-table">
               <thead>

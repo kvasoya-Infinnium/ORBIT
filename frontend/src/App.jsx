@@ -175,7 +175,7 @@ export default function App() {
           onSaved={async () => { await refresh(); }}
         />
       )}
-      {showAudit && <AuditModal onClose={() => setShowAudit(false)} />}
+      {showAudit && <AuditModal onClose={() => setShowAudit(false)} onRebindComplete={(res) => { setResult(res); setShowAudit(false); }} />}
     </div>
   );
 }
