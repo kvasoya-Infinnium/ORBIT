@@ -1,7 +1,8 @@
 // components/CredentialModal.jsx
 import React, { useState, useEffect } from "react";
 import { api } from "../api.js";
-import Icon, { connectorIconName } from "./Icon.jsx";
+import Icon from "./Icon.jsx";
+import BrandIcon from "./BrandIcon.jsx";
 
 function FolderBrowser({ onSelect, onCancel }) {
   const [items, setItems] = useState([]);
@@ -95,8 +96,8 @@ export default function CredentialModal({ connector, onClose, onSaved }) {
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-head">
-          <span className={"modal-icon ttype-" + connector.type_id}>
-            <Icon name={connectorIconName(connector.type_id)} size={20} />
+          <span className={"modal-icon modal-icon-brand ttype-" + connector.type_id}>
+            <BrandIcon typeId={connector.type_id} size={22} />
           </span>
           <div>
             <h3>{connector.name}</h3>

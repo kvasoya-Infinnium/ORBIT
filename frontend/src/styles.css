@@ -100,6 +100,14 @@ body {
   transition: border-color var(--t-fast), background var(--t-fast);
 }
 .status-pill:hover { border-color: var(--border-2); background: rgba(255,255,255,.05); }
+.status-pill.orbit-pill { color: var(--text); border-color: rgba(110,139,255,.35); background: rgba(110,139,255,.10); }
+.status-pill.orbit-pill .icon { color: var(--accent); }
+.status-pill-count {
+  display: inline-grid; place-items: center;
+  min-width: 20px; height: 20px; padding: 0 6px;
+  border-radius: 999px; font-weight: 700; font-size: 11.5px;
+  background: var(--accent); color: #0b1024;
+}
 /* gentle breathing pulse on the live status dot */
 .status-pill .dot.ok { animation: dot-breathe 2.2s ease-in-out infinite; }
 @keyframes dot-breathe {
@@ -239,6 +247,31 @@ button:disabled { opacity: .45; cursor: not-allowed; }
 .tile-icon {
   width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center; flex-shrink: 0;
   background: rgba(255,255,255,.05); color: var(--accent);
+  position: relative;
+}
+/* brand-icon variants: the SVG carries its own colors, so the wrapper just gives
+   it a neutral plate (don't tint via currentColor). */
+.tile-icon-brand { background: rgba(255,255,255,.08); }
+.tile-icon-brand .brand-icon { display: block; }
+.node-icon-brand { background: rgba(255,255,255,.10); }
+.modal-icon-brand { background: rgba(255,255,255,.10); }
+.ev-icon-brand { background: rgba(255,255,255,.10); }
+
+/* count badge on the sidebar tile (top-right corner of the brand chip) */
+.tile-badge {
+  position: absolute; top: -6px; right: -6px;
+  min-width: 18px; height: 18px; padding: 0 5px;
+  display: inline-grid; place-items: center;
+  border-radius: 999px;
+  background: var(--accent); color: #0b1024;
+  font-size: 10.5px; font-weight: 800;
+  border: 2px solid var(--panel);
+  box-shadow: 0 0 0 1px rgba(110,139,255,.35), 0 4px 10px rgba(110,139,255,.35);
+  animation: badge-pop .25s ease-out;
+}
+@keyframes badge-pop {
+  0% { transform: scale(.4); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
 }
 .tile-body { display: flex; flex-direction: column; min-width: 0; flex: 1; gap: 1px; }
 .tile-name { font-size: 13.5px; font-weight: 600; }

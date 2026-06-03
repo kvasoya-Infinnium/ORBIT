@@ -8,7 +8,8 @@
 //   • A bottom "Add connector" button opens a popover with the same list — a
 //     redundant entry point for users who prefer clicking to dragging.
 import React, { useState, useRef, useEffect } from "react";
-import Icon, { connectorIconName } from "./Icon.jsx";
+import Icon from "./Icon.jsx";
+import BrandIcon from "./BrandIcon.jsx";
 
 export default function Sidebar({ connectors, types, orbit, onAddTypeToOrbit }) {
   const [showAddMenu, setShowAddMenu] = useState(false);
@@ -56,8 +57,9 @@ export default function Sidebar({ connectors, types, orbit, onAddTypeToOrbit }) 
                 title="Drag to canvas · double-click to add"
               >
                 <Icon name="grip" size={16} className="tile-grip" />
-                <span className={"tile-icon ttype-" + t.type_id}>
-                  <Icon name={connectorIconName(t.type_id)} size={17} />
+                <span className={"tile-icon tile-icon-brand ttype-" + t.type_id}>
+                  <BrandIcon typeId={t.type_id} size={20} />
+                  {count > 0 && <span className="tile-badge">{count}</span>}
                 </span>
                 <span className="tile-body">
                   <span className="tile-name">{t.name}</span>
@@ -92,8 +94,8 @@ export default function Sidebar({ connectors, types, orbit, onAddTypeToOrbit }) 
                   onClick={() => pickFromMenu(t.type_id)}
                   title={`Add a ${t.name} to orbit`}
                 >
-                  <span className={"tile-icon ttype-" + t.type_id}>
-                    <Icon name={connectorIconName(t.type_id)} size={15} />
+                  <span className={"tile-icon tile-icon-brand ttype-" + t.type_id}>
+                    <BrandIcon typeId={t.type_id} size={18} />
                   </span>
                   <span className="add-menu-name">{t.name}</span>
                   <Icon name="plus" size={14} className="type-plus" />

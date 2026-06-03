@@ -8,7 +8,8 @@
 //  - The ring slowly rotates (CSS); each node's label counter-rotates to stay upright.
 //  - Hover a node to reveal a remove (×) button; double-click opens its credentials.
 import React from "react";
-import Icon, { connectorIconName } from "./Icon.jsx";
+import Icon from "./Icon.jsx";
+import BrandIcon from "./BrandIcon.jsx";
 
 const RADIUS = 168; // px from the core to each connector node
 const ZOOM_MIN = 0.35;
@@ -147,8 +148,8 @@ export default function OrbitCanvas({ orbit, byId, onDropType, onRemove, onOpenC
                         onDoubleClick={() => onOpenCreds(id)}
                         title="Double-click for credentials"
                       >
-                        <span className={"node-icon ttype-" + c.type_id}>
-                          <Icon name={connectorIconName(c.type_id)} size={16} />
+                        <span className={"node-icon node-icon-brand ttype-" + c.type_id}>
+                          <BrandIcon typeId={c.type_id} size={18} />
                         </span>
                         <span className="node-name">{c.name}</span>
                         <span className={"dot " + (c.connected ? "ok" : "warn")} />

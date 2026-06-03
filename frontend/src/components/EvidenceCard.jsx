@@ -2,7 +2,8 @@
 // One result in the ranked list. Shows the source badge, title, author/date,
 // snippet, and a link to the original. Gets highlighted when its citation is clicked.
 import React from "react";
-import Icon, { connectorIconName } from "./Icon.jsx";
+import Icon from "./Icon.jsx";
+import BrandIcon from "./BrandIcon.jsx";
 
 export default function EvidenceCard({ item, index = 0, highlighted, onOpen }) {
   return (
@@ -12,8 +13,8 @@ export default function EvidenceCard({ item, index = 0, highlighted, onOpen }) {
       style={{ animationDelay: `${Math.min(index, 12) * 0.05}s` }}
     >
       <div className="row">
-        <span className={"ev-icon ttype-" + item.source}>
-          <Icon name={connectorIconName(item.source)} size={15} />
+        <span className={"ev-icon ev-icon-brand ttype-" + item.source}>
+          <BrandIcon typeId={item.source} size={16} />
         </span>
         <span className="badge">{item.source}</span>
         <strong className="ev-title">{item.title}</strong>
