@@ -33,6 +33,7 @@
   --t-slack:     #e07be0;
   --t-zoho:      #34d399;
   --t-ai_chat:   #9a7bff;
+  --t-notion:    #ffffff;
 
   --r-sm: 8px; --r: 12px; --r-lg: 16px; --r-xl: 20px;
   --shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
@@ -189,6 +190,7 @@ button:disabled { opacity: .45; cursor: not-allowed; }
 .ttype-slack     { color: var(--t-slack);      background: rgba(224,123,224,.13); }
 .ttype-zoho      { color: var(--t-zoho);       background: rgba(52,211,153,.13); }
 .ttype-ai_chat   { color: var(--t-ai_chat);    background: rgba(154,123,255,.13); }
+.ttype-notion    { color: var(--t-notion);     background: rgba(255,255,255,.1); }
 
 /* ---------- workspace ---------- */
 .workspace { flex: 1; min-width: 0; display: flex; flex-direction: column; overflow-y: auto; padding: 20px 28px 30px; }
