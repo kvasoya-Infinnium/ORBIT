@@ -21,6 +21,8 @@ def extract_text(filename: str, raw: bytes) -> str:
     try:
         if name.endswith(".pdf"):
             import pypdf
+            import logging
+            logging.getLogger("pypdf").setLevel(logging.ERROR)
             reader = pypdf.PdfReader(io.BytesIO(raw))
             return "\n".join((page.extract_text() or "") for page in reader.pages)
         if name.endswith(".docx"):
