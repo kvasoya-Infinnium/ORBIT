@@ -107,7 +107,7 @@ export default function App() {
             {connectedCount}/{connectors.length} connected
           </span>
           <button className="ghost" onClick={() => setShowAudit(true)}>
-            <Icon name="clipboard" size={16} /> Audit log
+            <Icon name="clipboard" size={16} /> History
           </button>
         </div>
       </header>

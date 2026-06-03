@@ -166,6 +166,8 @@ async def query(body: QueryBody):
         question=body.question,
         connectors=body.connector_ids,
         item_ids=[it.id for it in items],
+        answer=result["answer"],
+        per_connector=result["per_connector"],
     )
     _RESULTS_CACHE[query_id] = items
 
@@ -184,6 +186,15 @@ async def query(body: QueryBody):
 @app.get("/audit")
 def get_audit():
     return audit.list_queries()
+
+
+@app.get("/history/{query_id}")
+def get_history_detail(query_id: str):
+    """Get full details of a past query for the history view."""
+    row = audit.get_query(query_id)
+    if not row:
+        raise HTTPException(404, "Query not found.")
+    return row
 
 
 class ExportBody(BaseModel):
