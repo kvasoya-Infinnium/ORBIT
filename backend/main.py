@@ -242,6 +242,7 @@ def rebind_from_history(query_id: str):
 
     return {
         "query_id": query_id,
+        "question": row.get("question", ""),
         "answer": row.get("answer", ""),
         "items": items,
         "synth_count": min(15, len(items)),
