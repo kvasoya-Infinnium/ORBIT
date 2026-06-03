@@ -610,18 +610,10 @@ button:disabled { opacity: .45; cursor: not-allowed; }
   padding: 7px 7px 7px 42px; border-radius: var(--r-lg); backdrop-filter: blur(8px);
   transition: border-color var(--t-fast), box-shadow var(--t-fast);
 }
-/* animated conic-gradient ring that lights up on focus */
-.querybar::before {
-  content: ""; position: absolute; inset: -1px; border-radius: var(--r-lg);
-  padding: 1px; pointer-events: none; opacity: 0; transition: opacity var(--t-med);
-  background: conic-gradient(from 0deg,
-    var(--accent), var(--cyan), var(--accent-2), var(--accent));
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor; mask-composite: exclude;
-  animation: spin 4s linear infinite;
+.querybar:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 24px rgba(110,139,255,.22);
 }
-.querybar:focus-within { border-color: transparent; box-shadow: 0 0 24px rgba(110,139,255,.22); }
-.querybar:focus-within::before { opacity: 1; }
 .querybar-icon {
   position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
   color: var(--muted); z-index: 1;
