@@ -25,8 +25,13 @@ const STOPWORDS = new Set([
 
 // Prefer the planner's structured terms. The planner (LLM) already understands
 // intent — for "find all PII" it expands to concrete identifiers (SSN, credit
-// card, phone, …) and that is exactly what we want to mark. We only chop up
-// the raw question as a LAST RESORT (no keywords / person / exact_value at all).
+// card, phone, …) and that is exactly what we want to mark.
+//
+// On TOP of the planner's terms we also pull "notable" tokens straight from
+// the question: ALL-CAPS acronyms (PII, NDA, SSN, GDPR, VPN) and capitalized
+// proper nouns. That way the original concept term is highlighted too if it
+// appears in the document — the planner's expansion only adds matches, never
+// loses one. Stopwords keep filler ("find", "all", "the") out.
 function collectTerms(query) {
   if (!query) return [];
   const out = new Set();
@@ -44,13 +49,24 @@ function collectTerms(query) {
   if (query.person) { push(query.person); hasStructured = true; }
   if (query.exact_value) { push(query.exact_value); hasStructured = true; }
 
-  if (!hasStructured && typeof query.question === "string") {
-    query.question.split(/\s+/).forEach((w) => {
-      const cleaned = w.replace(/[^\w\-]/g, "");
-      if (cleaned.length < 3) return;
-      if (STOPWORDS.has(cleaned.toLowerCase())) return;
-      push(cleaned);
-    });
+  if (typeof query.question === "string" && query.question.trim()) {
+    const tokens = query.question.split(/\s+/);
+    for (const raw of tokens) {
+      const cleaned = raw.replace(/[^\w\-]/g, "");
+      if (cleaned.length < 2) continue;
+      if (STOPWORDS.has(cleaned.toLowerCase())) continue;
+
+      const isAcronym = cleaned.length >= 2 && cleaned === cleaned.toUpperCase() && /[A-Z]/.test(cleaned);
+      const isProperNoun = cleaned.length >= 3 && /^[A-Z][a-z]+$/.test(cleaned);
+
+      if (hasStructured) {
+        // alongside the planner output: only the notable tokens
+        if (isAcronym || isProperNoun) push(cleaned);
+      } else if (cleaned.length >= 3) {
+        // last-resort fallback: planner returned nothing at all
+        push(cleaned);
+      }
+    }
   }
 
   // longer terms first so multi-word phrases beat their substrings
