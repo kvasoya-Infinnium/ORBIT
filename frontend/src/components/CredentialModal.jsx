@@ -25,6 +25,9 @@ export default function CredentialModal({ connector, onClose, onSaved }) {
       const res = await api.connect(connector.id, { ...values, label });
       setResult(res);
       await onSaved();
+      if (res.connected) {
+        onClose();
+      }
     } catch (e) {
       setResult({ connected: false, detail: e.message });
     } finally {
@@ -43,7 +46,6 @@ export default function CredentialModal({ connector, onClose, onSaved }) {
             <h3>{connector.name}</h3>
             <p>Enter credentials to connect this source.</p>
           </div>
-          <button className="modal-close" onClick={onClose}><Icon name="x" size={18} /></button>
         </div>
 
         <div className="modal-body">
@@ -74,7 +76,6 @@ export default function CredentialModal({ connector, onClose, onSaved }) {
         )}
 
         <div className="modal-foot">
-          <button className="ghost" onClick={onClose}>Close</button>
           <button className="primary" onClick={save} disabled={busy}>
             {busy ? "Connecting…" : "Save & Connect"}
           </button>
