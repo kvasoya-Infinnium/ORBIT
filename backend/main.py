@@ -74,83 +74,30 @@ def health():
 
 @app.get("/browse")
 def browse_folders():
-    """Open the modern Windows File Explorer folder picker and return the selected path."""
-    import subprocess
-    import platform
+    """Open the Windows File Explorer folder picker and return the selected path."""
+    import threading
 
-    if platform.system() == "Windows":
-        # Use COM-based modern folder picker (Windows Vista+ Explorer style)
-        script = """
-$source = @"
-using System;
-using System.Runtime.InteropServices;
-using System.Windows.Forms;
+    result_holder = {"path": None}
 
-[ComImport, Guid("DC1C5A9C-E88A-4dde-A5A1-60F82A20AEF7")]
-class FileOpenDialogCOM {}
+    def open_dialog():
+        import tkinter as tk
+        from tkinter import filedialog
+        root = tk.Tk()
+        root.withdraw()
+        root.attributes("-topmost", True)
+        folder = filedialog.askdirectory(title="Select a folder for ORBIT")
+        root.destroy()
+        if folder:
+            result_holder["path"] = folder
 
-[ComImport, Guid("42f85136-db7e-439c-85f1-e4075d135fc8"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-interface IFileOpenDialog {
-    [PreserveSig] int Show([In] IntPtr hwnd);
-    void SetFileTypes();
-    void SetFileTypeIndex();
-    void GetFileTypeIndex();
-    void Advise();
-    void Unadvise();
-    void SetOptions([In] uint fos);
-    void GetOptions();
-    void SetDefaultFolder();
-    void SetFolder();
-    void GetFolder();
-    void GetCurrentSelection();
-    void SetFileName();
-    void GetFileName();
-    void SetTitle([In, MarshalAs(UnmanagedType.LPWStr)] string title);
-    void GetResult(out IShellItem ppsi);
-}
+    # Run in a thread to avoid blocking the event loop
+    thread = threading.Thread(target=open_dialog)
+    thread.start()
+    thread.join(timeout=120)
 
-[ComImport, Guid("43826D1E-E718-42EE-BC55-A1E261C37BFE"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-interface IShellItem {
-    void BindToHandler();
-    void GetParent();
-    [PreserveSig] int GetDisplayName([In] uint sigdnName, [MarshalAs(UnmanagedType.LPWStr)] out string ppszName);
-}
-"@
-Add-Type -TypeDefinition $source -ReferencedAssemblies System.Windows.Forms
-
-$dialog = New-Object FileOpenDialogCOM
-$iDialog = [IFileOpenDialog]$dialog
-$iDialog.SetOptions(0x20)  # FOS_PICKFOLDERS
-$iDialog.SetTitle("Select a folder for ORBIT")
-$result = $iDialog.Show([IntPtr]::Zero)
-if ($result -eq 0) {
-    $item = $null
-    $iDialog.GetResult([ref]$item)
-    $path = $null
-    $item.GetDisplayName(0x80058000, [ref]$path)
-    Write-Output $path
-}
-"""
-        result = subprocess.run(
-            ["powershell", "-STA", "-Command", script],
-            capture_output=True, text=True, timeout=120
-        )
-        path = result.stdout.strip()
-        if path:
-            return {"path": path}
-        raise HTTPException(400, "No folder selected")
-    else:
-        try:
-            result = subprocess.run(
-                ["zenity", "--file-selection", "--directory", "--title=Select folder for ORBIT"],
-                capture_output=True, text=True, timeout=120
-            )
-            path = result.stdout.strip()
-            if path:
-                return {"path": path}
-        except FileNotFoundError:
-            pass
-        raise HTTPException(400, "No folder selected")
+    if result_holder["path"]:
+        return {"path": result_holder["path"]}
+    raise HTTPException(400, "No folder selected")
 
 
 async def _instance_dto(conn) -> dict:
