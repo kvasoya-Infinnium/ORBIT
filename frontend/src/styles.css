@@ -249,8 +249,30 @@ button:disabled { opacity: .45; cursor: not-allowed; }
 /* orbit wrapper — fills available space before search, shrinks after */
 .orbit-wrap { flex: 1; min-height: 0; display: flex; flex-direction: column; position: relative; }
 .orbit-wrap .orbit-canvas { flex: 1; height: auto; min-height: 0; }
-.orbit-wrap-shrunk { flex: 0 0 180px; }
+.orbit-wrap-shrunk { flex: 0 0 260px; min-height: 120px; }
 .orbit-wrap-shrunk .orbit-canvas { min-height: 0; }
+
+/* draggable splitter between orbit and querybar/results */
+.orbit-splitter {
+  flex-shrink: 0;
+  height: 10px;
+  margin: -2px 0;
+  cursor: row-resize;
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+  z-index: 2;
+}
+.orbit-splitter-handle {
+  width: 64px; height: 4px; border-radius: 2px;
+  background: var(--border-2);
+  transition: background var(--t-fast), width var(--t-fast);
+}
+.orbit-splitter:hover .orbit-splitter-handle,
+.orbit-splitter:active .orbit-splitter-handle {
+  background: var(--accent);
+  width: 96px;
+  box-shadow: 0 0 10px rgba(110,139,255,.4);
+}
 
 /* collapse button on top of the orbit when results are showing */
 .orbit-collapse-btn {

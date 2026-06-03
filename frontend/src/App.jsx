@@ -27,6 +27,27 @@ export default function App() {
   const [apiError, setApiError] = useState(null);
   const [abortController, setAbortController] = useState(null);
   const [orbitCollapsed, setOrbitCollapsed] = useState(false);
+  const [orbitHeight, setOrbitHeight] = useState(260);   // px, user-resizable via splitter
+
+  function startSplitterDrag(e) {
+    e.preventDefault();
+    const startY = e.clientY;
+    const startH = orbitHeight;
+    const onMove = (ev) => {
+      const next = Math.max(120, Math.min(window.innerHeight - 280, startH + (ev.clientY - startY)));
+      setOrbitHeight(next);
+    };
+    const onUp = () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    };
+    document.body.style.cursor = "row-resize";
+    document.body.style.userSelect = "none";
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+  }
 
   const refresh = useCallback(async () => {
     try {
@@ -152,25 +173,41 @@ export default function App() {
               </span>
             </button>
           ) : (
-            <div className={"orbit-wrap" + (result ? " orbit-wrap-shrunk" : "")}>
+            <>
+              <div
+                className={"orbit-wrap" + (result ? " orbit-wrap-shrunk" : "")}
+                style={result ? { flex: `0 0 ${orbitHeight}px` } : undefined}
+              >
+                {result && (
+                  <button
+                    className="orbit-collapse-btn"
+                    onClick={() => setOrbitCollapsed(true)}
+                    title="Collapse orbit"
+                  >
+                    <Icon name="chevron-up" size={16} /> Collapse
+                  </button>
+                )}
+                <OrbitCanvas
+                  connectors={connectors}
+                  orbit={orbit}
+                  byId={byId}
+                  onDropConnector={addToOrbit}
+                  onRemove={removeFromOrbit}
+                  onOpenCreds={(id) => setModalId(id)}
+                />
+              </div>
               {result && (
-                <button
-                  className="orbit-collapse-btn"
-                  onClick={() => setOrbitCollapsed(true)}
-                  title="Collapse orbit"
+                <div
+                  className="orbit-splitter"
+                  onMouseDown={startSplitterDrag}
+                  title="Drag to resize orbit"
+                  role="separator"
+                  aria-orientation="horizontal"
                 >
-                  <Icon name="chevron-up" size={16} /> Collapse
-                </button>
+                  <span className="orbit-splitter-handle" />
+                </div>
               )}
-              <OrbitCanvas
-                connectors={connectors}
-                orbit={orbit}
-                byId={byId}
-                onDropConnector={addToOrbit}
-                onRemove={removeFromOrbit}
-                onOpenCreds={(id) => setModalId(id)}
-              />
-            </div>
+            </>
           )}
 
           {/* ---- query bar ---- */}
