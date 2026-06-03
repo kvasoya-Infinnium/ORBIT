@@ -29,6 +29,25 @@ Given the user's question and the list of available connectors, return ONLY JSON
   },
   "intent": "one short sentence"
 }
+
+Build `keywords` carefully — these are the literal strings the connectors will
+match and the UI will highlight:
+- For SPECIFIC questions, pick the meaningful nouns/values only. Strip out
+  generic verbs ("find", "show"), articles ("the", "all"), and filler words.
+  Example: "give me employee details for salary 65200" -> keywords ["salary"],
+  exact_value "65200" (NOT ["give","employee","details","salary"]).
+- For ABSTRACT or CATEGORY questions, EXPAND the concept into concrete terms
+  that actually appear in documents. Examples:
+    "find all PII" -> ["SSN","social security","credit card","passport",
+       "date of birth","phone number","email address","driver license"]
+    "find confidential documents" -> ["confidential","proprietary","NDA",
+       "internal only","do not distribute","trade secret"]
+    "any financial info" -> ["invoice","payment","wire transfer","bank
+       account","routing number","IBAN","salary","bonus"]
+- Never echo back the question verbatim as keywords. Keep the list tight
+  (typically 1-8 entries); each entry should be a phrase a document would
+  literally contain.
+
 Choose connectors intelligently: a salary/HR document lookup favors fileshare, s3 and azure_blob;
 "what did X say" favors email, slack, ai_chat; a CRM/contact/deal lookup favors zoho;
 notes, docs, wiki, or knowledge base queries favor notion."""

@@ -9,7 +9,9 @@
 import React, { useMemo, useEffect, useRef } from "react";
 import Icon from "./Icon.jsx";
 
-// Stopwords we won't bother highlighting (too generic, just noise).
+// Stopwords for the LAST-RESORT fallback only (when the planner returned no
+// structured terms at all). These are obvious noise that should never be
+// highlighted, but the real signal comes from the planner.
 const STOPWORDS = new Set([
   "the","a","an","and","or","but","is","are","was","were","be","been","being",
   "of","to","in","on","for","with","at","by","from","as","into","about","that",
@@ -17,23 +19,32 @@ const STOPWORDS = new Set([
   "give","show","find","tell","get","please","need","want","what","when",
   "where","why","how","who","whom","whose","do","does","did","details",
   "info","information","data","record","records","employee","person",
+  "all","any","every","some","each","both","few","many","more","most","other",
+  "such","only","just","also","very","much","like","than","then","not","no",
 ]);
 
-// Pull out the words/phrases we want to highlight. We pull from BOTH the
-// structured planner query AND the raw question so single-term plans don't
-// leave the document looking unmarked.
+// Prefer the planner's structured terms. The planner (LLM) already understands
+// intent — for "find all PII" it expands to concrete identifiers (SSN, credit
+// card, phone, …) and that is exactly what we want to mark. We only chop up
+// the raw question as a LAST RESORT (no keywords / person / exact_value at all).
 function collectTerms(query) {
-  const out = new Set();
   if (!query) return [];
+  const out = new Set();
   const push = (v) => {
     if (!v) return;
     const s = String(v).trim();
     if (s.length >= 2) out.add(s);
   };
-  if (Array.isArray(query.keywords)) query.keywords.forEach(push);
-  push(query.person);
-  push(query.exact_value);
-  if (typeof query.question === "string") {
+
+  let hasStructured = false;
+  if (Array.isArray(query.keywords) && query.keywords.length) {
+    query.keywords.forEach(push);
+    hasStructured = true;
+  }
+  if (query.person) { push(query.person); hasStructured = true; }
+  if (query.exact_value) { push(query.exact_value); hasStructured = true; }
+
+  if (!hasStructured && typeof query.question === "string") {
     query.question.split(/\s+/).forEach((w) => {
       const cleaned = w.replace(/[^\w\-]/g, "");
       if (cleaned.length < 3) return;
@@ -41,6 +52,7 @@ function collectTerms(query) {
       push(cleaned);
     });
   }
+
   // longer terms first so multi-word phrases beat their substrings
   return [...out].sort((a, b) => b.length - a.length);
 }
