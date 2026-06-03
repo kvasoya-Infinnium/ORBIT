@@ -442,6 +442,15 @@ button:disabled { opacity: .45; cursor: not-allowed; }
 .history-detail-sources { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
 .history-source-chip { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
 
+.history-creds-list { display: flex; flex-direction: column; gap: 8px; }
+.history-cred-item { display: flex; align-items: center; gap: 10px; }
+.history-cred-keys { font-size: 12px; color: var(--faint); }
+
+.rebind-btn { margin-top: 4px; }
+.rebind-msg { margin: 8px 0 0; font-size: 13px; }
+.rebind-ok { color: #4ade80; }
+.rebind-err { color: var(--err); }
+
 /* scrollbars */
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-thumb { background: rgba(130,150,210,.22); border-radius: 8px; }

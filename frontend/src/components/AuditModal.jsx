@@ -6,6 +6,21 @@ import Icon from "./Icon.jsx";
 
 function DetailView({ detail, onBack }) {
   const perConnector = detail.per_connector ? JSON.parse(detail.per_connector) : {};
+  const [rebinding, setRebinding] = useState(false);
+  const [rebindMsg, setRebindMsg] = useState("");
+
+  async function handleRebind() {
+    setRebinding(true);
+    setRebindMsg("");
+    try {
+      const res = await api.rebind(detail.query_id);
+      setRebindMsg(`✓ Re-applied credentials for: ${res.rebound.join(", ")}`);
+    } catch (e) {
+      setRebindMsg("✗ " + (e.response?.data?.detail || e.message));
+    } finally {
+      setRebinding(false);
+    }
+  }
 
   return (
     <div className="history-detail">
@@ -48,6 +63,28 @@ function DetailView({ detail, onBack }) {
             <tr><td><strong>Results</strong></td><td>{detail.result_count} evidence items</td></tr>
           </tbody>
         </table>
+      </div>
+
+      {detail.credentials_used && Object.keys(detail.credentials_used).length > 0 && (
+        <div className="history-detail-section">
+          <h4>Credentials Used</h4>
+          <div className="history-creds-list">
+            {Object.entries(detail.credentials_used).map(([connId, creds]) => (
+              <div key={connId} className="history-cred-item">
+                <span className="chip">{connId}</span>
+                <span className="history-cred-keys">{Object.keys(creds).join(", ")}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className="history-detail-section">
+        <button className="primary rebind-btn" onClick={handleRebind} disabled={rebinding}>
+          <Icon name="refresh" size={15} />
+          {rebinding ? "Re-applying…" : "Rebind Credentials"}
+        </button>
+        {rebindMsg && <p className={"rebind-msg " + (rebindMsg.startsWith("✓") ? "rebind-ok" : "rebind-err")}>{rebindMsg}</p>}
       </div>
     </div>
   );
