@@ -104,6 +104,7 @@ export function connectorIconName(typeId) {
     notion: "notion",
     zoho: "users",
     ai_chat: "sparkles",
+    azure_blob: "cloud",
   }[typeId] || "plug";
 }
 

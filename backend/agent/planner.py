@@ -29,7 +29,7 @@ Given the user's question and the list of available connectors, return ONLY JSON
   },
   "intent": "one short sentence"
 }
-Choose connectors intelligently: a salary/HR document lookup favors fileshare and s3;
+Choose connectors intelligently: a salary/HR document lookup favors fileshare, s3 and azure_blob;
 "what did X say" favors email, slack, ai_chat; a CRM/contact/deal lookup favors zoho;
 notes, docs, wiki, or knowledge base queries favor notion."""
 

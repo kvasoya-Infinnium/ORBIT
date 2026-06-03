@@ -43,9 +43,11 @@ from connectors.slack import SlackConnector
 from connectors.zoho_crm import ZohoCRMConnector
 from connectors.ai_chat import AIChatConnector
 from connectors.notion import NotionConnector
+from connectors.azure_blob import AzureBlobConnector
 
 for cls in (FileshareConnector, EmailConnector, S3Connector,
-            SlackConnector, ZohoCRMConnector, AIChatConnector, NotionConnector):
+            SlackConnector, ZohoCRMConnector, AIChatConnector, NotionConnector,
+            AzureBlobConnector):
     registry.register_type(cls)
 
 # Make sure the audit table exists as soon as the app is imported.

@@ -34,6 +34,7 @@
   --t-zoho:      #34d399;
   --t-ai_chat:   #9a7bff;
   --t-notion:    #ffffff;
+  --t-azure_blob:#0078d4;
 
   --r-sm: 8px; --r: 12px; --r-lg: 16px; --r-xl: 20px;
   --shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
@@ -294,6 +295,7 @@ button:disabled { opacity: .45; cursor: not-allowed; }
 .ttype-zoho      { color: var(--t-zoho);       background: rgba(52,211,153,.13); }
 .ttype-ai_chat   { color: var(--t-ai_chat);    background: rgba(154,123,255,.13); }
 .ttype-notion    { color: var(--t-notion);     background: rgba(255,255,255,.1); }
+.ttype-azure_blob{ color: var(--t-azure_blob); background: rgba(0,120,212,.15); }
 
 /* per-type tile hover (vibrant glow) */
 .tile-ttype-fileshare:hover { border-color: rgba(244,168,94,.55) !important; box-shadow: 0 8px 22px rgba(244,168,94,.22), inset 0 0 0 1px rgba(244,168,94,.18); }
@@ -302,6 +304,7 @@ button:disabled { opacity: .45; cursor: not-allowed; }
 .tile-ttype-slack:hover     { border-color: rgba(224,123,224,.55) !important; box-shadow: 0 8px 22px rgba(224,123,224,.22), inset 0 0 0 1px rgba(224,123,224,.18); }
 .tile-ttype-zoho:hover      { border-color: rgba(52,211,153,.55)  !important; box-shadow: 0 8px 22px rgba(52,211,153,.22),  inset 0 0 0 1px rgba(52,211,153,.18); }
 .tile-ttype-ai_chat:hover   { border-color: rgba(154,123,255,.6)  !important; box-shadow: 0 8px 22px rgba(154,123,255,.26), inset 0 0 0 1px rgba(154,123,255,.2); }
+.tile-ttype-azure_blob:hover{ border-color: rgba(0,120,212,.55)   !important; box-shadow: 0 8px 22px rgba(0,120,212,.28),   inset 0 0 0 1px rgba(0,120,212,.18); }
 /* boost the tile-icon when its tile is hovered */
 .connector-tile:hover .tile-icon { transform: scale(1.08); transition: transform var(--t-fast); }
 
@@ -762,6 +765,8 @@ button:disabled { opacity: .45; cursor: not-allowed; }
 .card-ttype-slack::before     { background: var(--t-slack); }
 .card-ttype-zoho::before      { background: var(--t-zoho); }
 .card-ttype-ai_chat::before   { background: var(--t-ai_chat); }
+.card-ttype-azure_blob::before{ background: var(--t-azure_blob); }
+.card-ttype-azure_blob:hover  { box-shadow: 0 10px 28px rgba(0,0,0,.4), 0 0 18px rgba(0,120,212,.28); }
 .card-ttype-fileshare:hover { box-shadow: 0 10px 28px rgba(0,0,0,.4), 0 0 18px rgba(244,168,94,.25); }
 .card-ttype-email:hover     { box-shadow: 0 10px 28px rgba(0,0,0,.4), 0 0 18px rgba(110,168,254,.25); }
 .card-ttype-s3:hover        { box-shadow: 0 10px 28px rgba(0,0,0,.4), 0 0 18px rgba(255,159,67,.25); }

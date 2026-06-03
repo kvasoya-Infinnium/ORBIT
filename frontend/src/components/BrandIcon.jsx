@@ -80,6 +80,22 @@ const BRANDS = {
     </g>
   ),
 
+  // Microsoft Azure — blue card with the stylized "A" triangles
+  azure_blob: (
+    <g>
+      <rect x="2" y="3" width="20" height="18" rx="4" fill="#0078D4" />
+      <path
+        fill="#FFFFFF"
+        d="M11.6 6.5h2.3l4.6 11h-3l-.85-2.2h-3.85l-.9 2.2h-2.95zm.55 6.6h2.95l-1.48-3.95z"
+      />
+      <path
+        fill="#50E6FF"
+        opacity=".85"
+        d="M5.6 17.5h3.05l1.05-2.6 1.85-4.4-1.5-1.05z"
+      />
+    </g>
+  ),
+
   // Fileshare — generic folder, brand-neutral but in a warm color
   fileshare: (
     <g>
