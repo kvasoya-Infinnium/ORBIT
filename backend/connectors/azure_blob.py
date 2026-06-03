@@ -7,13 +7,14 @@ It lists the blobs in the configured container(s), downloads each document,
 extracts text with the same helper the local Fileshare/S3 connectors use, and
 turns matches into EvidenceItems.
 
-Auth: classic account name + account key. (Microsoft also supports connection
-strings and SAS tokens; we keep this simple and consistent with the S3 pattern.)
+Auth: a Storage Account connection string (the kind that starts with
+"DefaultEndpointsProtocol=https;AccountName=...;AccountKey=...;EndpointSuffix=
+core.windows.net"). If "Containers" is left blank we auto-discover every
+container the credential can read.
 
 Config (.env or popup):
-  AZURE_STORAGE_ACCOUNT=mystorageacct
-  AZURE_STORAGE_KEY=...
-  AZURE_BLOB_CONTAINERS=container-a,container-b
+  AZURE_BLOB_CONNECTION_STRING=DefaultEndpointsProtocol=https;AccountName=...;AccountKey=...;EndpointSuffix=core.windows.net
+  AZURE_BLOB_CONTAINERS=container-a,container-b   (optional — blank = all)
 """
 
 import asyncio
@@ -25,57 +26,89 @@ from core import textutil, config
 SUPPORTED = (".pdf", ".docx", ".txt", ".csv", ".md", ".json", ".log")
 
 
+def _parse_account_name(conn_str: str) -> str:
+    """Pull the AccountName out of a storage connection string."""
+    for part in conn_str.split(";"):
+        if "=" not in part:
+            continue
+        k, v = part.split("=", 1)
+        if k.strip().lower() == "accountname":
+            return v.strip()
+    return ""
+
+
 class AzureBlobConnector(Connector):
     id = "azure_blob"
     name = "Azure Blob"
     icon = "☁️"
     fields = [
-        {"key": "AZURE_STORAGE_ACCOUNT", "label": "Storage account", "type": "text", "placeholder": "mystorageacct"},
-        {"key": "AZURE_STORAGE_KEY", "label": "Account key", "type": "password", "placeholder": "..."},
-        {"key": "AZURE_BLOB_CONTAINERS", "label": "Containers (comma-separated)", "type": "text", "placeholder": "documents,uploads"},
+        {
+            "key": "AZURE_BLOB_CONNECTION_STRING",
+            "label": "Connection string",
+            "type": "password",
+            "placeholder": "DefaultEndpointsProtocol=https;AccountName=...;AccountKey=...;EndpointSuffix=core.windows.net",
+        },
+        {
+            "key": "AZURE_BLOB_CONTAINERS",
+            "label": "Containers (comma-separated, blank = all)",
+            "type": "text",
+            "placeholder": "documents,uploads",
+        },
     ]
 
     @property
-    def account(self): return config.get(self.instance_id, "AZURE_STORAGE_ACCOUNT", "")
+    def connection_string(self):
+        return config.get(self.instance_id, "AZURE_BLOB_CONNECTION_STRING", "")
+
     @property
-    def account_key(self): return config.get(self.instance_id, "AZURE_STORAGE_KEY", "")
-    @property
-    def containers(self):
+    def configured_containers(self):
         raw = config.get(self.instance_id, "AZURE_BLOB_CONTAINERS", "")
         return [c.strip() for c in raw.split(",") if c.strip()]
 
+    @property
+    def account(self):
+        return _parse_account_name(self.connection_string)
+
     def _service(self):
         from azure.storage.blob import BlobServiceClient
-        return BlobServiceClient(
-            account_url=f"https://{self.account}.blob.core.windows.net",
-            credential=self.account_key,
-        )
+        return BlobServiceClient.from_connection_string(self.connection_string)
+
+    def _containers_for(self, svc) -> list[str]:
+        """Return either the explicitly configured containers or every container
+        the credential can list."""
+        if self.configured_containers:
+            return self.configured_containers
+        return [c.name for c in svc.list_containers()]
 
     async def test_connection(self) -> ConnectionStatus:
-        if not (self.account and self.account_key):
-            return ConnectionStatus(connected=False, detail="Missing Azure storage credentials")
-        if not self.containers:
-            return ConnectionStatus(connected=False, detail="No AZURE_BLOB_CONTAINERS configured")
+        if not self.connection_string:
+            return ConnectionStatus(connected=False, detail="Missing Azure connection string")
         try:
-            def _check():
+            def _check() -> str:
                 svc = self._service()
-                for c in self.containers:
-                    # raises if the container is unreachable / not found / forbidden
-                    svc.get_container_client(c).get_container_properties()
-            await asyncio.to_thread(_check)
-            return ConnectionStatus(connected=True, detail=f"{len(self.containers)} container(s) reachable")
+                containers = self._containers_for(svc)
+                if not containers:
+                    raise RuntimeError("No containers found for this account")
+                # touch each configured container so a typo / missing container is reported
+                if self.configured_containers:
+                    for c in containers:
+                        svc.get_container_client(c).get_container_properties()
+                return f"{len(containers)} container(s) reachable"
+            detail = await asyncio.to_thread(_check)
+            return ConnectionStatus(connected=True, detail=detail)
         except Exception as e:
             return ConnectionStatus(connected=False, detail=str(e))
 
     async def search(self, q: SearchQuery) -> list[EvidenceItem]:
-        if not (self.account and self.account_key and self.containers):
+        if not self.connection_string:
             return []
 
         def _do_search() -> list[EvidenceItem]:
             results: list[EvidenceItem] = []
             svc = self._service()
+            account = self.account
             n = 0
-            for container in self.containers:
+            for container in self._containers_for(svc):
                 client = svc.get_container_client(container)
                 for blob in client.list_blobs():
                     if len(results) >= q.limit:
@@ -98,7 +131,7 @@ class AzureBlobConnector(Connector):
                         content=text,
                         author=None,
                         timestamp=blob.last_modified.isoformat() if getattr(blob, "last_modified", None) else None,
-                        link=f"https://{self.account}.blob.core.windows.net/{container}/{name}",
+                        link=f"https://{account}.blob.core.windows.net/{container}/{name}" if account else None,
                         metadata={"container": container, "size_bytes": getattr(blob, "size", None)},
                     ))
             return results

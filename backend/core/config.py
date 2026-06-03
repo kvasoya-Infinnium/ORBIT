@@ -18,7 +18,7 @@ import os
 _RUNTIME: dict[str, dict] = {}
 
 # keys whose values should never be sent back to the browser in full
-SECRET_HINTS = ("PASSWORD", "SECRET", "KEY", "TOKEN")
+SECRET_HINTS = ("PASSWORD", "SECRET", "KEY", "TOKEN", "CONNECTION_STRING")
 
 
 def _db():
