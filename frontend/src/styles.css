@@ -409,6 +409,14 @@ button:disabled { opacity: .45; cursor: not-allowed; }
 .source-meta-wide { grid-column: 1 / -1; }
 .source-meta code, .source-meta a { font-family: ui-monospace, monospace; font-size: 12px; color: var(--cyan); word-break: break-all; }
 .source-content-label { font-size: 10.5px; color: var(--faint); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 7px; }
+.source-metadata-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px;
+  background: rgba(0,0,0,.2); border: 1px solid var(--border); border-radius: var(--r);
+  padding: 14px; margin-bottom: 10px;
+}
+.source-metadata-item { display: flex; flex-direction: column; gap: 2px; }
+.source-metadata-key { font-size: 11px; color: var(--faint); text-transform: capitalize; }
+.source-metadata-value { font-size: 13px; color: var(--text); word-break: break-all; }
 .source-content {
   background: rgba(0,0,0,.34); border: 1px solid var(--border); border-radius: var(--r);
   padding: 15px; max-height: 50vh; overflow: auto; white-space: pre-wrap; word-break: break-word;

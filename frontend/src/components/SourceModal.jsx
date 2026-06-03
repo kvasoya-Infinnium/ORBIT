@@ -10,8 +10,9 @@ import React from "react";
 import Icon from "./Icon.jsx";
 
 export default function SourceModal({ item, onClose }) {
-  // If it IS a real web link (Slack/Zoho https), offer to open it too.
   const isWeb = item.link && /^https?:\/\//i.test(item.link);
+  const meta = item.metadata || {};
+  const metaKeys = Object.keys(meta).filter(k => k !== "root");
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
@@ -37,6 +38,20 @@ export default function SourceModal({ item, onClose }) {
                 : <code>{item.link || "—"}</code>}
             </div>
           </div>
+
+          {metaKeys.length > 0 && (
+            <>
+              <div className="source-content-label">File Metadata</div>
+              <div className="source-metadata-grid">
+                {metaKeys.map((key) => (
+                  <div key={key} className="source-metadata-item">
+                    <span className="source-metadata-key">{key.replace(/_/g, " ")}</span>
+                    <span className="source-metadata-value">{String(meta[key])}</span>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
 
           <div className="source-content-label">Captured content</div>
           <pre className="source-content">{item.content || "(no content captured)"}</pre>
