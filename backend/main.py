@@ -30,7 +30,7 @@ from core import registry, config
 from core.connector import ConnectionStatus
 from core.models import EvidenceItem
 from agent import pipeline
-from services import audit, export
+from services import audit, export, credentials
 
 # Register every connector TYPE (a template), then seed one INSTANCE of each so the
 # app opens with the familiar six connectors. Users can add more instances of any
@@ -49,6 +49,8 @@ for cls in (FileshareConnector, EmailConnector, S3Connector,
 
 # Make sure the audit table exists as soon as the app is imported.
 audit.init_db()
+# Load persisted credentials from DB into memory.
+config.init_from_db()
 
 # ------------------------------------------------------------------------------
 app = FastAPI(title="ORBIT — Unified Discovery Agent")
@@ -120,6 +122,7 @@ def delete_connector(instance_id: str):
     if not registry.get(instance_id):
         raise HTTPException(404, "Unknown connector instance")
     registry.remove_instance(instance_id)
+    credentials.delete_connector_creds(instance_id)
     return {"removed": instance_id}
 
 
@@ -171,6 +174,9 @@ async def query(body: QueryBody):
     )
     _RESULTS_CACHE[query_id] = items
 
+    # Snapshot which credentials were used for this query
+    credentials.snapshot_for_query(query_id, body.connector_ids)
+
     return {
         "query_id": query_id,
         "answer": result["answer"],
@@ -194,7 +200,29 @@ def get_history_detail(query_id: str):
     row = audit.get_query(query_id)
     if not row:
         raise HTTPException(404, "Query not found.")
+    # Include which credentials (masked) were used
+    raw_creds = credentials.get_query_creds(query_id)
+    masked = {}
+    for conn_id, cred_dict in raw_creds.items():
+        masked[conn_id] = {
+            k: ("••••••••" if config.is_secret(k) else v)
+            for k, v in cred_dict.items()
+        }
+    row["credentials_used"] = masked
     return row
+
+
+@app.post("/history/{query_id}/rebind")
+def rebind_from_history(query_id: str):
+    """Re-apply credentials from a past query to the current connectors."""
+    creds_map = credentials.get_query_creds(query_id)
+    if not creds_map:
+        raise HTTPException(404, "No saved credentials for this query.")
+    rebound = []
+    for conn_id, cred_dict in creds_map.items():
+        config.set_creds(conn_id, cred_dict)
+        rebound.append(conn_id)
+    return {"rebound": rebound}
 
 
 class ExportBody(BaseModel):

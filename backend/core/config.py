@@ -3,16 +3,13 @@ core/config.py
 --------------
 Where a connector's credentials come from.
 
-Two sources, checked in this order:
-  1. RUNTIME  — credentials typed into the UI popup (saved here, in memory).
-  2. .env     — environment variables (the fallback / pre-seeded values).
+Three sources, checked in this order:
+  1. RUNTIME  — credentials typed into the UI popup (saved here, in memory + DB).
+  2. DATABASE — persisted credentials from previous sessions.
+  3. .env     — environment variables (the fallback / pre-seeded values).
 
-This is what lets the UI "Connect" popup work: the frontend POSTs credentials,
-we store them here, and the connector immediately starts using them — no restart,
-no editing files.
-
-Note: runtime creds live in memory only (cleared on restart). That's fine for a
-hackathon demo. A production version would encrypt and persist them.
+On startup, credentials are loaded from the database into memory. When the UI
+POSTs new credentials, they are saved to both memory and DB.
 """
 
 import os
@@ -24,16 +21,34 @@ _RUNTIME: dict[str, dict] = {}
 SECRET_HINTS = ("PASSWORD", "SECRET", "KEY", "TOKEN")
 
 
+def _db():
+    """Lazy import to avoid circular imports at startup."""
+    from services.credentials import save_creds, load_all_creds, load_creds
+    return save_creds, load_all_creds, load_creds
+
+
+def init_from_db() -> None:
+    """Load all persisted credentials into memory on startup."""
+    global _RUNTIME
+    _, load_all, _ = _db()
+    _RUNTIME = load_all()
+
+
 def set_creds(conn_id: str, creds: dict) -> None:
-    """Save credentials typed in the UI for one connector."""
+    """Save credentials typed in the UI — to memory AND database."""
     store = _RUNTIME.setdefault(conn_id, {})
+    clean = {}
     for k, v in creds.items():
         if v is not None and v != "":
             store[k] = v
+            clean[k] = v
+    if clean:
+        save, _, _ = _db()
+        save(conn_id, clean)
 
 
 def get(conn_id: str, key: str, default: str = "") -> str:
-    """Read one credential: runtime value first, then .env, then default."""
+    """Read one credential: runtime/DB value first, then .env, then default."""
     runtime = _RUNTIME.get(conn_id, {})
     if key in runtime:
         return runtime[key]
