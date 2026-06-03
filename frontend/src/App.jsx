@@ -130,10 +130,6 @@ export default function App() {
           <span className="brand-sub">Unified Discovery Agent</span>
         </div>
         <div className="topbar-right">
-          <span className="status-pill orbit-pill" title="Connectors currently in the orbit">
-            <Icon name="orbit" size={13} />
-            <span className="status-pill-count">{orbit.length}</span> in orbit
-          </span>
           <span className="status-pill">
             <span className={"dot " + (connectedCount > 0 ? "ok" : "warn")} />
             {connectedCount}/{connectors.length} connected
