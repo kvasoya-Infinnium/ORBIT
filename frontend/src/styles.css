@@ -934,6 +934,14 @@ button:disabled { opacity: .45; cursor: not-allowed; }
   transition: all .15s;
 }
 .history-eye-btn:hover { color: var(--accent); background: rgba(110,139,255,.1); }
+.history-clear-btn {
+  margin-left: auto; display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px; padding: 6px 10px; border-radius: 8px;
+  color: var(--err); border: 1px solid rgba(251,113,133,.35);
+  background: rgba(251,113,133,.08);
+}
+.history-clear-btn:hover { background: rgba(251,113,133,.18); color: var(--err); }
+.history-clear-btn:disabled { opacity: .6; cursor: not-allowed; }
 .history-question-cell { max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .history-detail { display: flex; flex-direction: column; gap: 18px; }

@@ -98,3 +98,9 @@ def delete_connector_creds(connector_id: str) -> None:
     """Remove all stored credentials for a connector."""
     with _conn() as c:
         c.execute("DELETE FROM credentials WHERE connector_id=?", (connector_id,))
+
+
+def clear_query_snapshots() -> None:
+    """Drop every per-query credential snapshot. Use when clearing audit history."""
+    with _conn() as c:
+        c.execute("DELETE FROM query_credentials")

@@ -89,3 +89,11 @@ def get_query(query_id: str) -> dict | None:
     with _conn() as c:
         row = c.execute("SELECT * FROM audit WHERE query_id=?", (query_id,)).fetchone()
     return dict(row) if row else None
+
+
+def clear_all() -> int:
+    """Delete every audit row. Returns the number of rows removed."""
+    with _conn() as c:
+        n = c.execute("SELECT COUNT(*) FROM audit").fetchone()[0]
+        c.execute("DELETE FROM audit")
+    return n

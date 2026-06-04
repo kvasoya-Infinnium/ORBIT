@@ -26,6 +26,7 @@ export const api = {
   query: (question, connector_ids, { signal } = {}) =>
     http.post("/query", { question, connector_ids }, { signal }).then((r) => r.data),
   audit: () => http.get("/audit").then((r) => r.data),
+  clearAudit: () => http.delete("/audit").then((r) => r.data),
   historyDetail: (query_id) => http.get(`/history/${query_id}`).then((r) => r.data),
   rebind: (query_id) => http.post(`/history/${query_id}/rebind`).then((r) => r.data),
   browse: (path = "") => http.get("/browse", { params: { path } }).then((r) => r.data),

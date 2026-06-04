@@ -98,6 +98,7 @@ export default function AuditModal({ onClose, onRebindComplete }) {
   const [rows, setRows] = useState([]);
   const [detail, setDetail] = useState(null);
   const [loadingId, setLoadingId] = useState(null);
+  const [clearing, setClearing] = useState(false);
 
   useEffect(() => { api.audit().then(setRows); }, []);
 
@@ -113,6 +114,20 @@ export default function AuditModal({ onClose, onRebindComplete }) {
     }
   }
 
+  async function handleClear() {
+    if (!window.confirm(`Permanently delete all ${rows.length} query record(s) from history? This cannot be undone.`)) return;
+    setClearing(true);
+    try {
+      await api.clearAudit();
+      setRows([]);
+      setDetail(null);
+    } catch (e) {
+      alert("Could not clear history: " + (e.response?.data?.detail || e.message));
+    } finally {
+      setClearing(false);
+    }
+  }
+
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal modal-wide" onClick={(e) => e.stopPropagation()}>
@@ -122,6 +137,17 @@ export default function AuditModal({ onClose, onRebindComplete }) {
             <h3>Query History</h3>
             <p>All past queries — click the eye icon to view full details.</p>
           </div>
+          {!detail && rows.length > 0 && (
+            <button
+              className="ghost history-clear-btn"
+              onClick={handleClear}
+              disabled={clearing}
+              title="Delete all history"
+            >
+              <Icon name="x" size={14} />
+              {clearing ? "Clearing…" : "Clear history"}
+            </button>
+          )}
           <button className="modal-close" onClick={onClose}><Icon name="x" size={18} /></button>
         </div>
         <div className="modal-body">

@@ -247,6 +247,15 @@ def get_audit():
     return audit.list_queries()
 
 
+@app.delete("/audit")
+def clear_audit():
+    """Wipe every past query from the audit log + the matching credential snapshots."""
+    removed = audit.clear_all()
+    credentials.clear_query_snapshots()
+    _RESULTS_CACHE.clear()
+    return {"removed": removed}
+
+
 @app.get("/history/{query_id}")
 def get_history_detail(query_id: str):
     """Get full details of a past query for the history view."""
