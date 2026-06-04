@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- dark navy disc background -->
+  <circle cx="32" cy="32" r="32" fill="#0B1024"/>
+  <!-- subtle inner glow -->
+  <circle cx="32" cy="32" r="22" fill="#141B36"/>
+  <!-- tilted orbit ring -->
+  <ellipse cx="32" cy="32" rx="22" ry="9"
+           fill="none" stroke="#34E3CF" stroke-width="2.4"
+           transform="rotate(-30 32 32)"/>
+  <!-- central planet -->
+  <circle cx="32" cy="32" r="6.5" fill="#34E3CF"/>
+  <circle cx="32" cy="32" r="6.5" fill="none" stroke="#FFFFFF" stroke-width="0.6" opacity="0.55"/>
+  <!-- satellite dot at the ring's end -->
+  <circle cx="51.5" cy="20" r="2.6" fill="#9A7BFF"/>
+</svg>
