@@ -27,12 +27,13 @@ export default function ResultsPanel({ result }) {
     }, 100);
   }
 
-  async function doExport(fmt) {
+  async function doExport(fmt = "xlsx") {
     const blob = await api.export(result.query_id, fmt);
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `orbit_review_set.${fmt}`;
+    const ts = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
+    a.download = `orbit_review_set_${ts}.${fmt}`;
     a.click();
     URL.revokeObjectURL(url);
   }
@@ -53,8 +54,8 @@ export default function ResultsPanel({ result }) {
           </button>
         ))}
         <span className="results-spacer" />
-        <button className="ghost" onClick={() => doExport("csv")}><Icon name="download" size={15} /> CSV</button>
-        <button className="ghost" onClick={() => doExport("json")}><Icon name="download" size={15} /> JSON</button>
+        <button className="ghost" onClick={() => doExport("xlsx")}><Icon name="download" size={15} /> Export Data</button>
+        <button className="ghost" onClick={() => doExport("zip")}><Icon name="download" size={15} /> Download ZIP</button>
       </div>
 
       {/* Tab content */}

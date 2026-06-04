@@ -907,8 +907,18 @@ button:disabled { opacity: .45; cursor: not-allowed; }
 .source-metadata-value { font-size: 13px; color: var(--text); word-break: break-all; }
 .source-content {
   background: rgba(0,0,0,.34); border: 1px solid var(--border); border-radius: var(--r);
-  padding: 15px; max-height: 50vh; overflow: auto; white-space: pre-wrap; word-break: break-word;
+  padding: 15px; overflow: auto; white-space: pre-wrap; word-break: break-word;
   font-family: ui-monospace, monospace; font-size: 12.5px; line-height: 1.6; color: var(--text); margin: 0;
+  flex: 1 1 auto; min-height: 220px; max-height: 50vh;
+}
+
+/* Small screens: give the modal more room and let captured content stretch to fill it. */
+@media (max-height: 820px), (max-width: 900px) {
+  .modal { max-height: 92vh; }
+  .modal-wide { width: min(92vw, 780px); }
+  .source-meta { grid-template-columns: 1fr; gap: 8px 0; margin-bottom: 12px; }
+  .source-metadata-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); padding: 10px; gap: 8px; }
+  .source-content { max-height: none; min-height: 280px; }
 }
 
 /* audit table */

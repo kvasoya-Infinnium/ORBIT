@@ -20,7 +20,7 @@ import os
 import json
 import asyncio
 from fastapi import FastAPI, HTTPException, Body
-from fastapi.responses import PlainTextResponse
+from fastapi.responses import PlainTextResponse, Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
@@ -66,7 +66,8 @@ app.add_middleware(
 )
 
 # A tiny in-memory cache so /export can reproduce a recent query's items.
-_RESULTS_CACHE: dict[str, list[EvidenceItem]] = {}
+# Stores: { query_id: {"items": [...], "question": str, "per_connector": dict} }
+_RESULTS_CACHE: dict[str, dict] = {}
 
 
 @app.get("/health")
@@ -219,7 +220,11 @@ async def query(body: QueryBody):
         per_connector=result["per_connector"],
         items_json=json.dumps(items_dumped),
     )
-    _RESULTS_CACHE[query_id] = items
+    _RESULTS_CACHE[query_id] = {
+        "items": items,
+        "question": body.question,
+        "per_connector": result["per_connector"],
+    }
 
     # Snapshot which credentials were used for this query
     credentials.snapshot_for_query(query_id, body.connector_ids)
@@ -299,14 +304,38 @@ def rebind_from_history(query_id: str):
 
 class ExportBody(BaseModel):
     query_id: str
-    format: str = "csv"   # "csv" | "json"
+    format: str = "xlsx"   # "xlsx" | "csv" | "json"
 
 
 @app.post("/export")
 def do_export(body: ExportBody):
-    items = _RESULTS_CACHE.get(body.query_id)
-    if items is None:
+    cached = _RESULTS_CACHE.get(body.query_id)
+    if cached is None:
         raise HTTPException(404, "No cached results for that query_id (re-run the query).")
+    items = cached["items"]
     if body.format == "json":
         return PlainTextResponse(export.to_json(items), media_type="application/json")
-    return PlainTextResponse(export.to_csv(items), media_type="text/csv")
+    if body.format == "csv":
+        return PlainTextResponse(export.to_csv(items), media_type="text/csv")
+    if body.format == "zip":
+        blob = export.to_zip(
+            items,
+            question=cached.get("question", ""),
+            per_connector=cached.get("per_connector"),
+        )
+        return Response(
+            content=blob,
+            media_type="application/zip",
+            headers={"Content-Disposition": 'attachment; filename="orbit_review_set.zip"'},
+        )
+    # default: xlsx
+    blob = export.to_xlsx(
+        items,
+        question=cached.get("question", ""),
+        per_connector=cached.get("per_connector"),
+    )
+    return Response(
+        content=blob,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": 'attachment; filename="orbit_review_set.xlsx"'},
+    )

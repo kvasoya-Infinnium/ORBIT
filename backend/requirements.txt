@@ -14,3 +14,4 @@ azure-storage-blob  # Azure Blob
 pypdf           # PDF text extraction (Fileshare + S3)
 python-docx     # DOCX text extraction
 python-dateutil # date parsing helpers
+openpyxl        # Excel (.xlsx) export

@@ -152,6 +152,29 @@ class EmailConnector(Connector):
                 pass
         return results
 
+    def fetch_raw(self, uid: str) -> bytes | None:
+        """Re-fetch the original RFC822 bytes for a message by UID — used by the
+        ZIP export so reviewers get true `.eml` files, not just the parsed body."""
+        if not self.user or not self.password:
+            return None
+        try:
+            m = self._connect()
+        except Exception:
+            return None
+        try:
+            m.select("INBOX")
+            typ, msg_data = m.fetch(uid.encode() if isinstance(uid, str) else uid, "(RFC822)")
+            if typ != "OK" or not msg_data or not msg_data[0]:
+                return None
+            return msg_data[0][1]
+        except Exception:
+            return None
+        finally:
+            try:
+                m.logout()
+            except Exception:
+                pass
+
     def _get_body(self, msg) -> str:
         """Pull the plain-text body out of an email (skips attachments/HTML where possible)."""
         if msg.is_multipart():
